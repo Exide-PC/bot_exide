@@ -5,8 +5,11 @@ import youtube
 import json
 from dotenv import load_dotenv
 
-load_dotenv()
+env = load_dotenv()
 discord_token = os.getenv('DISCORD_TOKEN')
+
+if (discord_token == None):
+    raise Exception('Ensure .env file exists')
 
 gachi_playlist = 'PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG'
 cfg_path = 'bot.cfg'

@@ -8,12 +8,16 @@ from dotenv import load_dotenv
 import random
 import asyncio
 import youtube
+from voice_service import VoiceService
+import re
 
-# bot = commands.Bot()
-bot = discord.Client()
-voice_client = None
+bot = commands.Bot(command_prefix = 'cb!')
+# bot = discord.Client()
+# voice_client = None
 config = None
 config_update_callback = None
+
+voice = None
 
 gachi_queue = []
 is_gachi_radio = False
@@ -23,12 +27,18 @@ def update_cfg(new_cfg: dict):
     config_update_callback(new_cfg)
     config = new_cfg
 
-async def gachi_loop(message, search_value=None):
-    # grab user's voice channel
-    voice_channel = message.author.voice.channel # TODO Not in voice channel
-    if (voice_channel == None):
-        return
+async def connect_to(user):
+    global voice
+    voice_channel = user.voice.channel
+    if (voice_channel == None): return
 
+    if (not voice.is_connected()):
+        voice_client = await voice_channel.connect()
+        voice.set_client(voice_client)
+    else:
+        await voice.client.move_to(voice_channel)
+
+async def gachi_loop(message, search_value=None):
     gachi_list = config['gachi']
     if (search_value != None and len(search_value) > 0):
         gachi_list = list(filter(
@@ -39,17 +49,14 @@ async def gachi_loop(message, search_value=None):
         await message.channel.send(f'Nothing was found by keyphrase "{search_value}"')
         return
 
-    global voice_client
+    global voice
     # TODO hold info about the channel to join for each queue entry
-    if (voice_client == None):
-        voice_client = await voice_channel.connect()
-    else:
-        await voice_client.move_to(voice_channel)
+    await connect_to(message.author)
 
     chosen_gachi = random.choice(gachi_list)
     gachi_queue.append(chosen_gachi)
     
-    if (voice_client.is_playing()):
+    if (voice.is_playing()):
         if (not is_gachi_radio):
             await message.channel.send(f'{chosen_gachi["title"]} was added to queue')
         else:
@@ -62,23 +69,12 @@ async def gachi_loop(message, search_value=None):
         await message.channel.send(f'Now playing: {next_gachi["title"]}')
         file_path = youtube.download_sound(next_gachi['videoId'])
 
-        audio = discord.FFmpegPCMAudio(file_path)
-        voice_client.play(
-            audio, 
-            after=lambda exc: print(str(exc) if exc != None else 'Finished ok')
-        )
-
-        while (True): # post-condition loop
-            await asyncio.sleep(1)
-            if (not voice_client.is_playing()):
-                break
+        await voice.play_async(file_path)
 
         if (len(gachi_queue) > 0):
             gachi_queue.pop(0)
-        voice_client.stop()
 
-    await voice_client.disconnect()
-    voice_client = None
+    await voice.disconnect()
 
 @bot.event
 async def on_message(message):
@@ -86,17 +82,21 @@ async def on_message(message):
         return
     
     msg = message.content
-    global voice_client, is_gachi_radio
+    global voice, is_gachi_radio
+
+    # message mapping if necessary
+    if (msg.lower() == 'gachi depression'):
+        msg = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
 
     if (msg.lower() == 'gachi radio'):
         is_gachi_radio = True
         await gachi_loop(message)
     elif (msg.lower() == 'gachi skip'):
-        voice_client.stop()
+        voice.stop()
     elif (msg.lower() == 'gachi stop'):
-        if (voice_client != None and voice_client.is_playing()):
+        if (voice.is_connected() and voice.is_playing()):
             is_gachi_radio = False
-            voice_client.stop()
+            voice.stop()
     elif (msg.lower() == 'gachi help'):
         await message.channel.send('Commands: gachi [radio,skip,stop,*search value*]')
     elif (msg.lower().startswith('gachi')):
@@ -110,12 +110,22 @@ async def on_message(message):
     elif (msg.lower() == 'disc'):
         if (message.channel.type.name != 'private' or voice_client == None): return
         await voice_client.disconnect()
+    elif (msg.lower().startswith('play')):
+        matches = re.findall('v=\w+', msg[len('play'):].strip())
+        if (len(matches) != 1):
+            await message.channel.send('Wrong youtube video url')
+            return
+        video_id = matches[0][2:] # skipping v=
+        file_path = youtube.download_sound(video_id)
+        await connect_to(message.author)
+        await voice.play_async(file_path)
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected\n')
 
 def start(token: str, cfg: dict, cfg_update_callback):
-    global config, config_update_callback
+    global config, config_update_callback, voice
     config, config_update_callback = cfg, cfg_update_callback
+    voice = VoiceService()
     bot.run(token)

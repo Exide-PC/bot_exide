@@ -50,7 +50,10 @@ async def gachi_loop(message, search_value=None):
     gachi_queue.append(chosen_gachi)
     
     if (voice_client.is_playing()):
-        await message.channel.send(f'{chosen_gachi["title"]} was added to queue')
+        if (not is_gachi_radio):
+            await message.channel.send(f'{chosen_gachi["title"]} was added to queue')
+        else:
+            await message.channel.send(f'Gachi radio is already active')
         return
 
     while (len(gachi_queue) > 0 or is_gachi_radio):
@@ -88,7 +91,7 @@ async def on_message(message):
     if (msg.lower() == 'gachi radio'):
         is_gachi_radio = True
         await gachi_loop(message)
-    if (msg.lower() == 'gachi skip'):
+    elif (msg.lower() == 'gachi skip'):
         voice_client.stop()
     elif (msg.lower() == 'gachi stop'):
         if (voice_client != None and voice_client.is_playing()):
@@ -99,6 +102,14 @@ async def on_message(message):
     elif (msg.lower().startswith('gachi')):
         search = msg[len('gachi'):].strip()
         await gachi_loop(message, search)
+    elif (msg.lower() == 'join'):
+        if (message.channel.type.name != 'private'): return
+        member = bot.guilds[0].get_member(message.author.id)
+        if (member.voice == None): return
+        voice_client = await member.voice.channel.connect(timeout = 10)
+    elif (msg.lower() == 'disc'):
+        if (message.channel.type.name != 'private' or voice_client == None): return
+        await voice_client.disconnect()
 
 @bot.event
 async def on_ready():

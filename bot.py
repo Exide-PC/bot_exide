@@ -25,7 +25,7 @@ def update_cfg(new_cfg: dict):
 
 async def gachi_loop(message, search_value=None):
     # grab user's voice channel
-    voice_channel = message.author.voice.channel
+    voice_channel = message.author.voice.channel # TODO Not in voice channel
     if (voice_channel == None):
         return
 
@@ -64,9 +64,11 @@ async def gachi_loop(message, search_value=None):
             audio, 
             after=lambda exc: print(str(exc) if exc != None else 'Finished ok')
         )
-        
-        while (voice_client.is_playing()):
+
+        while (True): # post-condition loop
             await asyncio.sleep(1)
+            if (not voice_client.is_playing()):
+                break
 
         if (len(gachi_queue) > 0):
             gachi_queue.pop(0)

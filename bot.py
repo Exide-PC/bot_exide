@@ -66,6 +66,7 @@ async def on_message(message):
         voice.stop()
     elif (msg.lower() == 'gachi stop'):
         gachi.is_radio = False
+        voice.stop()
     elif (msg.lower() == 'gachi current'):
         await message.channel.send(f'Now playing: {gachi.current}')
     elif (msg.lower() == 'gachi help'):

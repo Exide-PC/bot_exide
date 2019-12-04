@@ -1,4 +1,3 @@
-
 import discord
 import time
 import asyncio
@@ -7,11 +6,9 @@ from threading import Thread
 from discord.player import PCMVolumeTransformer
 
 class VoiceService:
-    def __init__(self, voice_client: VoiceClient = None):
-        self.set_client(voice_client)
-
-    def set_client(self, voice_client: VoiceClient):
-        self.client = voice_client
+    client = None
+    channel = None
+    source_channel = None
 
     def is_connected(self): return self.client != None and self.client.is_connected()
     def is_playing(self): return self.is_connected() and self.client.is_playing()
@@ -52,14 +49,16 @@ class VoiceService:
                 break
         self.client.stop()
 
-    async def join_channel(self, channel):
-        if (channel == None): return
+    async def join_channel(self, voice_channel, source_channel):
+        if (voice_channel == None): return
+        self.channel = voice_channel
+        self.source_channel = source_channel
 
         if (not self.is_connected()):
-            voice_client = await channel.connect()
-            self.set_client(voice_client)
+            voice_client = await voice_channel.connect()
+            self.client = voice_client
         else:
-            await self.client.move_to(channel)
+            await self.client.move_to(voice_channel)
 
     def stop(self):
         self.client.stop()

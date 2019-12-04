@@ -50,7 +50,7 @@ def download_sound(video_id: str) -> str:
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         video_url = f'https://www.youtube.com/watch?v={video_id}'
-        ydl.download([video_url])
+        ydl.download([video_url]) # TODO: try ... except
 
     return file_name
 

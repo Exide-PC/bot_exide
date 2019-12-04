@@ -16,33 +16,33 @@ class VoiceService:
     def is_playing(self): return self.is_connected() and self.client.is_playing()
 
     def _play(self, file_path: str):
-        if (not self.client.is_connected()):
-            raise Exception('Voice client is not initialized')
+        if (self.client == None):
+            raise Exception('Voice client does not exist')
+        if (not self.is_connected()):
+            raise Exception('Voice client is not connected')
         if (self.client.is_playing()):
             raise Exception('Voice client is already busy')
 
         audio = discord.FFmpegPCMAudio(file_path)
-        self.client.play(
-            audio, 
-            after=lambda exc: print(str(exc) if exc != None else 'Finished ok')
-        )
+        self.client.play(audio)
 
     def play(self, file_path: str, after):
         def thread():
             self._play(file_path)
 
-            while (True): # post-condition loop
+            while (True): # post-condition blocking loop
                 time.sleep(1)
                 if (not self.client.is_playing()):
                     break
             self.client.stop()
+            after()
 
         Thread(target=thread).start()
 
     async def play_async(self, file_path: str):
         self._play(file_path)
 
-        while (True): # post-condition loop
+        while (True): # post-condition async loop
             await asyncio.sleep(1)
             if (not self.client.is_playing()):
                 break
@@ -52,5 +52,8 @@ class VoiceService:
         self.client.stop()
 
     async def disconnect(self):
+        if (self.client.is_playing()):
+            raise Exception('Can\'t disconnect while something is playing')
+            
         await self.client.disconnect()
         self.client = None

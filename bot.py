@@ -111,7 +111,7 @@ async def on_message(message):
         if (message.channel.type.name != 'private' or voice_client == None): return
         await voice_client.disconnect()
     elif (msg.lower().startswith('play')):
-        matches = re.findall('v=\w+', msg[len('play'):].strip())
+        matches = re.findall('v=[\w-]+', msg[len('play'):].strip())
         if (len(matches) != 1):
             await message.channel.send('Wrong youtube video url')
             return

@@ -11,6 +11,8 @@ import youtube
 from voice_service import VoiceService
 import re
 
+# https://discordpy.readthedocs.io/en/latest/api.html
+
 bot = commands.Bot(command_prefix = 'cb!')
 # bot = discord.Client()
 # voice_client = None
@@ -27,17 +29,6 @@ def update_cfg(new_cfg: dict):
     config_update_callback(new_cfg)
     config = new_cfg
 
-async def connect_to(user):
-    global voice
-    voice_channel = user.voice.channel
-    if (voice_channel == None): return
-
-    if (not voice.is_connected()):
-        voice_client = await voice_channel.connect()
-        voice.set_client(voice_client)
-    else:
-        await voice.client.move_to(voice_channel)
-
 async def gachi_loop(message, search_value=None):
     gachi_list = config['gachi']
     if (search_value != None and len(search_value) > 0):
@@ -51,7 +42,7 @@ async def gachi_loop(message, search_value=None):
 
     global voice
     # TODO hold info about the channel to join for each queue entry
-    await connect_to(message.author)
+    await voice.join_channel(message.author.voice.channel)
 
     chosen_gachi = random.choice(gachi_list)
     gachi_queue.append(chosen_gachi)
@@ -74,19 +65,28 @@ async def gachi_loop(message, search_value=None):
         if (len(gachi_queue) > 0):
             gachi_queue.pop(0)
 
-    await voice.disconnect()
-
 @bot.event
 async def on_message(message):
     if (message.author == bot.user):
         return
+
+    is_max_volume = False
+
+    # message preprocessing to handle shortcuts
+    if (message.content.lower() == 'gachi depression'):
+        message.content = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
+    if (message.content.lower() == 'kekw'):
+        message.content = 'play https://www.youtube.com/watch?v=7wivOEXlL9s'
+    if (message.content.lower() == 'knock'):
+        message.content = 'play https://www.youtube.com/watch?v=ir-pKzGsKPQ'
+        is_max_volume = True
+
+    # we also need the 'voice' property which is not being
+    # passed in case the message was received via PM
+    author = bot.guilds[0].get_member(message.author.id)
     
     msg = message.content
     global voice, is_gachi_radio
-
-    # message mapping if necessary
-    if (msg.lower() == 'gachi depression'):
-        msg = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
 
     if (msg.lower() == 'gachi radio'):
         is_gachi_radio = True
@@ -103,13 +103,11 @@ async def on_message(message):
         search = msg[len('gachi'):].strip()
         await gachi_loop(message, search)
     elif (msg.lower() == 'join'):
-        if (message.channel.type.name != 'private'): return
-        member = bot.guilds[0].get_member(message.author.id)
-        if (member.voice == None): return
-        voice_client = await member.voice.channel.connect(timeout = 10)
+        if (author.voice == None): return
+        await voice.join_channel(author.voice.channel)
     elif (msg.lower() == 'disc'):
-        if (message.channel.type.name != 'private' or voice_client == None): return
-        await voice_client.disconnect()
+        if (message.channel.type.name != 'private' or author.voice.channel == None): return
+        await voice.disconnect()
     elif (msg.lower().startswith('play')):
         matches = re.findall('v=[\w-]+', msg[len('play'):].strip())
         if (len(matches) != 1):
@@ -117,8 +115,10 @@ async def on_message(message):
             return
         video_id = matches[0][2:] # skipping v=
         file_path = youtube.download_sound(video_id)
-        await connect_to(message.author)
-        await voice.play_async(file_path)
+        await voice.join_channel(author.voice.channel)
+        await voice.play_async(file_path, is_max_volume)
+    elif (msg.lower() == 'skip'):
+        voice.stop()
 
 @bot.event
 async def on_ready():

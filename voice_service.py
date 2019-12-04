@@ -4,6 +4,7 @@ import time
 import asyncio
 from discord.voice_client import VoiceClient
 from threading import Thread
+from discord.player import PCMVolumeTransformer
 
 class VoiceService:
     def __init__(self, voice_client: VoiceClient = None):
@@ -15,7 +16,7 @@ class VoiceService:
     def is_connected(self): return self.client != None and self.client.is_connected()
     def is_playing(self): return self.is_connected() and self.client.is_playing()
 
-    def _play(self, file_path: str):
+    def _play(self, file_path: str, is_max_volume=False):
         if (self.client == None):
             raise Exception('Voice client does not exist')
         if (not self.is_connected()):
@@ -23,30 +24,42 @@ class VoiceService:
         if (self.client.is_playing()):
             raise Exception('Voice client is already busy')
 
-        audio = discord.FFmpegPCMAudio(file_path)
+        audio = PCMVolumeTransformer(
+            discord.FFmpegPCMAudio(file_path), 
+            2 if is_max_volume else 1
+        )
         self.client.play(audio)
 
-    def play(self, file_path: str, after):
+    def play(self, file_path: str, is_max_volume=False, after=None):
         def thread():
-            self._play(file_path)
+            self._play(file_path, is_max_volume)
 
             while (True): # post-condition blocking loop
                 time.sleep(1)
                 if (not self.client.is_playing()):
                     break
             self.client.stop()
-            after()
+            if (after != None): after()
 
         Thread(target=thread).start()
 
-    async def play_async(self, file_path: str):
-        self._play(file_path)
+    async def play_async(self, file_path: str, is_max_volume=False):
+        self._play(file_path, is_max_volume)
 
         while (True): # post-condition async loop
             await asyncio.sleep(1)
             if (not self.client.is_playing()):
                 break
         self.client.stop()
+
+    async def join_channel(self, channel):
+        if (channel == None): return
+
+        if (not self.is_connected()):
+            voice_client = await channel.connect()
+            self.set_client(voice_client)
+        else:
+            await self.client.move_to(channel)
 
     def stop(self):
         self.client.stop()

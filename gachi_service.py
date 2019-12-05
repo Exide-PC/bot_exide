@@ -46,7 +46,7 @@ class GachiService:
                 next_gachi = random.choice(self._gachi_list) if self.is_radio else self._queue.pop(0)
                 self.current = next_gachi['title']
 
-                # await self._voice.source_channel.send(f'Now playing: {next_gachi["title"]}')
+                await self._voice.source_channel.send(f'Now playing: {next_gachi["title"]}')
                 file_path = youtube.download_sound(next_gachi['videoId'])
 
                 await self._voice.play_async(file_path)
@@ -59,5 +59,4 @@ class GachiService:
         self._voice = voice
         self._gachi_list = gachi_list
 
-        self.thread = Thread(target=self.entry)
-        self.thread.start()
+        asyncio.create_task(self._loop())

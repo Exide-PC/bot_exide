@@ -33,8 +33,9 @@ def update_cfg(new_cfg: dict):
 
 @bot.event
 async def on_message(message):
-    if (message.author == bot.user):
-        return
+    if (message.channel.type.name != 'private' and 
+        message.channel.name != 'bot-exide' or
+        message.author == bot.user): return
 
     async def message_callback(msg: str):
         await message.channel.send(msg)
@@ -83,7 +84,7 @@ async def on_message(message):
         if (not voice.is_connected()): return
         await voice.disconnect()
     elif (msg.lower().startswith('play')):
-        matches = re.findall('v=[\w-]+', msg[len('play'):].strip())
+        matches = re.findall(r'v=[\w-]+', msg[len('play'):].strip())
         if (len(matches) != 1):
             await message.channel.send('Wrong youtube video url')
             return
@@ -96,11 +97,12 @@ async def on_message(message):
 
 @bot.event
 async def on_ready():
+    global voice, gachi
+    voice = VoiceService()
+    gachi = GachiService(voice, config['gachi'])
     print(f'{bot.user} has connected\n')
 
 def start(token: str, cfg: dict, cfg_update_callback):
-    global config, config_update_callback, voice, gachi
+    global config, config_update_callback
     config, config_update_callback = cfg, cfg_update_callback
-    voice = VoiceService()
-    gachi = GachiService(voice, config['gachi'])
     bot.run(token)

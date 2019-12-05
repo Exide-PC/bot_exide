@@ -37,6 +37,30 @@ def playlist_items(listId: str) -> []:
 
     return videos
 
+def search(query: str):
+    url = "https://www.googleapis.com/youtube/v3/search"
+    results = []
+
+    params = {
+        'key': token,
+        'part': 'snippet',
+        'q': query,
+        'maxResults': 15
+    }
+    req = PreparedRequest()
+    req.prepare_url(url, params)
+
+    json = requests.get(req.url).json()
+
+    for item in json['items']:
+        if (not item['id'].get('videoId')): continue
+        results.append({
+            'videoId': item['id']['videoId'],
+            'title': item['snippet']['title']
+        })
+
+    return results
+
 def download_sound(video_id: str) -> str:
     ext = 'webm'
     file_name: str = f'music/{video_id}.{ext}'
@@ -56,4 +80,5 @@ def download_sound(video_id: str) -> str:
 
 if (__name__ == '__main__'):
     # download_sound('y3YHnkCDnKY')
-    items = playlist_items('PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG')
+    # items = playlist_items('PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG')
+    search('exide')

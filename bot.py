@@ -47,6 +47,8 @@ async def on_message(message):
         message.content = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
     if (message.content.lower() == 'kekw'):
         message.content = 'play https://www.youtube.com/watch?v=7wivOEXlL9s'
+    if (message.content.lower() == 'fits'):
+        message.content = 'play https://www.youtube.com/watch?v=zxriE8aVY1M'
     if (message.content.lower() == 'knock'):
         message.content = 'play https://www.youtube.com/watch?v=ir-pKzGsKPQ'
         is_max_volume = True
@@ -90,6 +92,18 @@ async def on_message(message):
             return
         video_id = matches[0][2:] # skipping v=
         file_path = youtube.download_sound(video_id)
+        if (gachi.is_radio):
+            gachi.is_radio = False
+        await voice.join_channel(author_vc, message.channel)
+        await voice.play_async(file_path, is_max_volume)
+    elif (msg.lower().startswith('search')):
+        query = msg[len('search'):].strip()
+        result = youtube.search(query)[0]
+        video_id = result['videoId']
+        await message.channel.send(f'Playing: {result["title"]}')
+        file_path = youtube.download_sound(video_id)
+        if (gachi.is_radio):
+            gachi.is_radio = False
         await voice.join_channel(author_vc, message.channel)
         await voice.play_async(file_path, is_max_volume)
     elif (msg.lower() == 'skip'):

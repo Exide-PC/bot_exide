@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 import random
 import asyncio
 import youtube
-from voice_service import VoiceService
+from player import Player
 from gachi_service import GachiService
 import re
 
@@ -20,7 +20,7 @@ bot = commands.Bot(command_prefix = 'cb!')
 config = None
 config_update_callback = None
 
-voice = None
+player = None
 gachi = None
 
 gachi_queue = []
@@ -59,17 +59,17 @@ async def on_message(message):
     author_vc = author.voice.channel if author.voice != None else None
     
     msg = message.content
-    global voice, is_gachi_radio
+    global player, is_gachi_radio
 
     if (msg.lower() == 'gachi radio'):
-        if (not voice.is_connected() and author_vc != None):
-            await voice.join_channel(author_vc, message.channel)
+        if (not player.is_connected() and author_vc != None):
+            await player.join_channel(author_vc, message.channel)
         gachi.is_radio = True
     elif (msg.lower() == 'gachi skip'):
-        voice.stop()
+        player.stop()
     elif (msg.lower() == 'gachi stop'):
         gachi.is_radio = False
-        voice.stop()
+        player.stop()
     elif (msg.lower() == 'gachi current'):
         await message.channel.send(f'Now playing: {gachi.current}')
     elif (msg.lower() == 'gachi help'):
@@ -78,13 +78,13 @@ async def on_message(message):
         search_value = msg[len('gachi'):].strip()
         is_added = await gachi.enqueue(search_value, message_callback)
         if (is_added and author_vc != None):
-            await voice.join_channel(author_vc, message.channel)
+            await player.join_channel(author_vc, message.channel)
     elif (msg.lower() == 'join'):
         if (author_vc == None): return
-        await voice.join_channel(author_vc, message.channel)
+        await player.join_channel(author_vc, message.channel)
     elif (msg.lower() == 'disc'):
-        if (not voice.is_connected()): return
-        await voice.disconnect()
+        if (not player.is_connected()): return
+        await player.disconnect()
     elif (msg.lower().startswith('play')):
         matches = re.findall(r'v=[\w-]+', msg[len('play'):].strip())
         if (len(matches) != 1):
@@ -94,8 +94,8 @@ async def on_message(message):
         file_path = youtube.download_sound(video_id)
         if (gachi.is_radio):
             gachi.is_radio = False
-        await voice.join_channel(author_vc, message.channel)
-        await voice.play_async(file_path, is_max_volume)
+        await player.join_channel(author_vc, message.channel)
+        await player.play_async(file_path, is_max_volume)
     elif (msg.lower().startswith('search')):
         query = msg[len('search'):].strip()
         result = youtube.search(query)[0]
@@ -104,16 +104,16 @@ async def on_message(message):
         file_path = youtube.download_sound(video_id)
         if (gachi.is_radio):
             gachi.is_radio = False
-        await voice.join_channel(author_vc, message.channel)
-        await voice.play_async(file_path, is_max_volume)
+        await player.join_channel(author_vc, message.channel)
+        await player.play_async(file_path, is_max_volume)
     elif (msg.lower() == 'skip'):
-        voice.stop()
+        player.stop()
 
 @bot.event
 async def on_ready():
-    global voice, gachi
-    voice = VoiceService()
-    gachi = GachiService(voice, config['gachi'])
+    global player, gachi
+    player = Player()
+    gachi = GachiService(player, config['gachi'])
     print(f'{bot.user} has connected\n')
 
 def start(token: str, cfg: dict, cfg_update_callback):

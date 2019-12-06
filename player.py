@@ -5,7 +5,7 @@ from discord.voice_client import VoiceClient
 from threading import Thread
 from discord.player import PCMVolumeTransformer
 
-class VoiceService:
+class Player:
     client = None
     channel = None
     source_channel = None

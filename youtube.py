@@ -78,7 +78,22 @@ def download_sound(video_id: str) -> str:
 
     return file_name
 
+def downlad_and_trunc_sound(video_id: str, start: str) -> str:
+    file_path = download_sound(video_id)
+    return _trunc(file_path, start)
+
+def _trunc(file_path: str, start: str) -> str:
+    parts = start.split(':')
+    minute, second = f'{int(parts[0]):02}', f'{int(parts[1]):02}'
+
+    cut_file = "{0}_{2}.{1}".format(*file_path.rsplit('.', 1) + [f'{minute}-{second}'])
+
+    if (not os.path.exists(cut_file)):
+        os.system(f"ffmpeg -i {file_path} -ss 00:{minute}:{second} {cut_file}")
+
+    return cut_file
+
 if (__name__ == '__main__'):
-    # download_sound('y3YHnkCDnKY')
+    _trunc('music/7wtfhZwyrcc.webm', '1:01')
+    # download_sound('7wtfhZwyrcc&t=60')
     # items = playlist_items('PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG')
-    search('exide')

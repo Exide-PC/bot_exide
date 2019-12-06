@@ -8,7 +8,6 @@ from discord.player import PCMVolumeTransformer
 class Player:
     client = None
     channel = None
-    source_channel = None
     current_file = None
 
     def is_connected(self): return self.client != None and self.client.is_connected()
@@ -55,12 +54,14 @@ class Player:
             self.current_file = None
             # self.client.stop()
 
-    async def join_channel(self, voice_channel, source_channel):
+    async def join_channel(self, voice_channel, reconnect=False):
         if (voice_channel == None): return
         self.channel = voice_channel
-        self.source_channel = source_channel
 
         if (not self.is_connected()):
+            if (reconnect):
+                prev_client = await voice_channel.connect()
+                await prev_client.disconnect()
             voice_client = await voice_channel.connect()
             self.client = voice_client
         else:

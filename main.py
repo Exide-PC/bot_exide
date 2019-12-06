@@ -11,7 +11,9 @@ discord_token = os.getenv('DISCORD_TOKEN')
 if (discord_token == None):
     raise Exception('Ensure .env file exists')
 
-gachi_playlist = 'PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG'
+gachi_playlist1 = 'PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG'
+gachi_playlist2 = 'PL0gU26yd_WJtO4z6KCXxrLlQlYaqnvXZF'
+
 cfg_path = 'bot.cfg'
 cfg = None
 
@@ -23,7 +25,9 @@ if (not os.path.exists(cfg_path)):
     with open(cfg_path, 'w') as f:
         """ default cfg """
         cfg = {
-            'gachi': youtube.playlist_items(gachi_playlist)
+            'gachi': 
+                youtube.playlist_items(gachi_playlist1) + 
+                youtube.playlist_items(gachi_playlist2)
         }
         json.dump(cfg, f, indent=4)
 else:

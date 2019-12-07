@@ -99,9 +99,6 @@ async def on_message(message):
         gachi.is_radio = False
         player.stop()
     
-    elif (msg.lower() == 'gachi current'):
-        await message.channel.send(f'Now playing: {gachi.current}')
-    
     elif (msg.lower() == 'gachi help'):
         await message.channel.send('Commands: gachi [radio,skip,stop,current,*search value*]')
     

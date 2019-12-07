@@ -11,7 +11,6 @@ from player import Player
 class GachiService:
     is_radio = False
     msg_callback = None
-    current = None
     _gachi_list = None
     _player = None
     _queue = []
@@ -53,7 +52,6 @@ class GachiService:
         while (True):
             while (self._player.is_connected() and (len(self._queue) > 0 or self.is_radio)):
                 next_gachi = random.choice(self._gachi_list) if self.is_radio else self._queue.pop(0)
-                self.current = next_gachi['title']
 
                 await self.message_callback(f'Now playing: {next_gachi["title"]}')
                 file_path = youtube.download_sound(next_gachi['videoId'])

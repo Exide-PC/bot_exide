@@ -26,16 +26,16 @@ class GachiService:
             self._gachi_list
         ))
 
-    async def enqueue(self, search: str, msg_callback):
+    async def enqueue(self, keyword: str, msg_callback):
         self.message_callback = msg_callback
         
-        if (search != None and len(search) > 0):
-            search_results = search(search)
+        if (keyword != None and len(keyword) > 0):
+            search_results = self.search(keyword)
         else:
             search_results = [random.choice(self._gachi_list)]
             
         if (len(search_results) == 0):
-            await msg_callback(f'Nothing was found by keyphrase "{search}"')
+            await msg_callback(f'Nothing was found by keyphrase "{keyword}"')
             return False
 
         chosen_gachi = search_results[0] # TODO: Add search results dialog

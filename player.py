@@ -1,11 +1,11 @@
+import asyncio
 import discord
 import time
-import asyncio
 from discord.voice_client import VoiceClient
 from threading import Thread
 from discord.player import PCMVolumeTransformer
 
-class Player:
+class Voice:
     client = None
     channel = None
     current_file = None
@@ -34,7 +34,7 @@ class Player:
 
             while (True): # post-condition blocking loop
                 time.sleep(1)
-                if (self.is_playing() or file_path != self.current_file):
+                if (not self.is_playing() or file_path != self.current_file):
                     break
             if (self.current_file == file_path):
                 self.current_file = None
@@ -48,7 +48,7 @@ class Player:
 
         while (True): # post-condition async loop
             await asyncio.sleep(1)
-            if (self.is_playing() or file_path != self.current_file):
+            if (not self.is_playing() or file_path != self.current_file):
                 break
         if (self.current_file == file_path):
             self.current_file = None
@@ -72,7 +72,33 @@ class Player:
         self.client.stop()
 
     async def disconnect(self):
+        if (not self.is_connected()):
+            return
+
         await self.client.disconnect()
         self.client = None
         self.channel = None
         self.current_file = None
+
+class Player(Voice):
+    is_queue_mode = True
+    queue = []
+
+    def __init__(self):
+        super().__init__()
+        asyncio.create_task(self._loop())
+        
+    async def _loop(self):
+        while (True):
+            while (self.is_queue_mode and (len(self.queue) > 0)):
+                item_callback = self.queue.pop(0)
+                file_path = await item_callback()
+                if (file_path != None):
+                    await self.play_async(file_path)
+            await asyncio.sleep(1)
+
+    def enqueue(self, item_callback):
+        self.queue.append(item_callback)
+
+    def skip(self):
+        self.stop()

@@ -25,7 +25,7 @@ class GachiService:
             self._gachi_list
         ))
 
-    async def enqueue(self, keyword: str, msg_callback):
+    async def enqueue(self, keyword: str, channel, msg_callback):
         self.message_callback = msg_callback
         
         if (keyword != None and len(keyword) > 0):
@@ -35,39 +35,45 @@ class GachiService:
             
         if (len(search_results) == 0):
             await msg_callback(f'Nothing was found by keyphrase "{keyword}"')
-            return False
 
         chosen_gachi = search_results[0] # TODO: Add search results dialog
-        self._queue.append(chosen_gachi)
+
+        async def item_callback():
+            video_id = chosen_gachi['videoId']
+            await self._player.join_channel(channel)
+            await msg_callback(f'Now playing: {chosen_gachi["title"]}')
+            return youtube.download_sound(video_id)
+        self._player.enqueue(item_callback)
 
         if (self._player.is_playing()):
-            if (not self.is_radio):
-                await msg_callback(f'{chosen_gachi["title"]} was added to queue')
-            else:
-                await msg_callback(f'Gachi radio is already active')
-        
-        return True
+            await msg_callback(f'{chosen_gachi["title"]} was added to queue')
 
-    async def _loop(self):
-        while (True):
-            while (self._player.is_connected() and (len(self._queue) > 0 or self.is_radio)):
-                next_gachi = random.choice(self._gachi_list) if self.is_radio else self._queue.pop(0)
+    async def _radio_loop(self):
+        # deactivate queue mode while radio is active
+        self._player.is_queue_mode = False
 
-                await self.message_callback(f'Now playing: {next_gachi["title"]}')
-                file_path = youtube.download_sound(next_gachi['videoId'])
+        while (self.is_radio and self._player.is_connected()):
+            next_gachi = random.choice(self._gachi_list)
 
-                await self._player.play_async(file_path)
+            await self.message_callback(f'Now playing: {next_gachi["title"]}')
+            file_path = youtube.download_sound(next_gachi['videoId'])
+
+            await self._player.play_async(file_path)
             await asyncio.sleep(1)
+        self._player.is_queue_mode = True
 
-    def radio(self, is_active: bool, message_callback=None):
+    def radio(self, message_callback=None):
         self.message_callback = message_callback
-        self.is_radio = is_active
-    
-    def entry(self):
-        asyncio.run(self._loop())
+        self.is_radio = True
+        asyncio.create_task(self._radio_loop())
+
+    def skip(self):
+        self._player.skip()
+
+    def stop(self):
+        self.is_radio = False
+        self._player.skip()
 
     def __init__(self, player: Player, gachi_list: []):
         self._player = player
         self._gachi_list = gachi_list
-
-        asyncio.create_task(self._loop())

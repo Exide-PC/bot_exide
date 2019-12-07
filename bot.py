@@ -23,9 +23,6 @@ config_update_callback = None
 player = None
 gachi = None
 
-gachi_queue = []
-is_gachi_radio = False
-
 def update_cfg(new_cfg: dict):
     global config
     config_update_callback(new_cfg)
@@ -85,35 +82,34 @@ async def on_message(message):
     author_vc = author.voice.channel if author.voice != None else None
     
     msg = message.content
-    global player, is_gachi_radio
+    global player
 
     if (msg.lower() == 'gachi radio'):
-        if (not player.is_connected() and author_vc != None):
-            await player.join_channel(author_vc)
-        gachi.radio(True, send_message)
+        if (author_vc == None):
+            return
+        await player.join_channel(author_vc)
+        gachi.radio(send_message)
     
     elif (msg.lower() == 'gachi skip'):
-        player.stop()
+        gachi.skip()
     
     elif (msg.lower() == 'gachi stop'):
-        gachi.is_radio = False
-        player.stop()
+        gachi.stop()
     
     elif (msg.lower() == 'gachi help'):
-        await message.channel.send('Commands: gachi [radio,skip,stop,current,*search value*]')
+        await send_message('Commands: gachi [radio,skip,stop,current,*search value*]')
     
     elif (msg.lower().startswith('gachi')):
+        if (author_vc == None):
+            return
         search_value = msg[len('gachi'):].strip()
-        is_added = await gachi.enqueue(search_value, send_message)
-        if (is_added and author_vc != None):
-            await player.join_channel(author_vc)
+        await gachi.enqueue(search_value, author_vc, send_message)
 
     elif (msg.lower() == 'join'):
         if (author_vc == None): return
         await player.join_channel(author_vc)
 
     elif (msg.lower() == 'disc'):
-        if (not player.is_connected()): return
         await player.disconnect()
 
     elif (msg.lower().startswith('play')):
@@ -124,23 +120,25 @@ async def on_message(message):
 
         matches = re.findall(r'v=[\w-]+', video_url)
         if (len(matches) != 1):
-            await message.channel.send('Wrong youtube video url')
+            await send_message('Wrong youtube video url')
             return
         video_id = matches[0][2:] # skipping v=
 
-        if (len(parts) == 2):
-            file_path = youtube.download_sound(video_id)
-        elif (len(parts) == 3):
-            try:
-                file_path = youtube.downlad_and_trunc_sound(video_id, parts[1])
-            except ValueError:
-                await send_message('Incorrent timecode input')
-                return
+        async def item_callback():
+            if (len(parts) == 2):
+                file_path = youtube.download_sound(video_id)
+            elif (len(parts) == 3):
+                try:
+                    file_path = youtube.downlad_and_trunc_sound(video_id, parts[1])
+                except ValueError:
+                    await send_message('Incorrent timecode input')
+                    return
+            await player.join_channel(author_vc)
+            await player.play_async(file_path, is_max_volume)
 
-        if (gachi.is_radio):
-            gachi.is_radio = False
-        await player.join_channel(author_vc)
-        await player.play_async(file_path, is_max_volume)
+        if (player.is_playing()):
+            await send_message(f'Your video was added to queue')
+        player.queue.append(item_callback)
 
     elif (msg.lower().startswith('search')):
         query = msg[len('search'):].strip()
@@ -149,23 +147,22 @@ async def on_message(message):
             await send_message('Nothing was found :c')
             return
         selected_index = await choice(list(map(lambda v: v['title'], search_results)), author.id, send_message)
-        if (selected_index == None): return
+        if (selected_index == None):
+            return
         video = search_results[selected_index]
         video_id = video['videoId']
-        await message.channel.send(f'Playing: {video["title"]}')
-        file_path = youtube.download_sound(video_id)
-        if (gachi.is_radio):
-            gachi.is_radio = False
-        await player.join_channel(author_vc)
-        await player.play_async(file_path, is_max_volume)
+
+        async def item_callback():
+            await send_message(f'Playing: {video["title"]}')
+            await player.join_channel(author_vc)
+            return youtube.download_sound(video_id)
+
+        if (player.is_playing()):
+            await send_message(f'{video["title"]} was added to queue')
+        player.queue.append(item_callback)
 
     elif (msg.lower() in ['skip', 'stop']):
-        player.stop()
-
-    elif (msg.lower() == 'choice'):
-        options = ['Swallow', 'My', 'Cum']
-        result = await choice(options, author.id, send_message)
-        await send_message(f'Your choice is: {options[result]}' if result != None else 'Choice timeout :c')
+        player.skip()
 
 @bot.event
 async def on_ready():

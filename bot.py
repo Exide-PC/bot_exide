@@ -89,7 +89,7 @@ async def on_message(message):
 
     if (msg.lower() == 'gachi radio'):
         if (not player.is_connected() and author_vc != None):
-            await player.join_channel(author_vc, message.channel)
+            await player.join_channel(author_vc)
         gachi.radio(True, send_message)
     
     elif (msg.lower() == 'gachi skip'):
@@ -109,11 +109,11 @@ async def on_message(message):
         search_value = msg[len('gachi'):].strip()
         is_added = await gachi.enqueue(search_value, send_message)
         if (is_added and author_vc != None):
-            await player.join_channel(author_vc, message.channel)
+            await player.join_channel(author_vc)
 
     elif (msg.lower() == 'join'):
         if (author_vc == None): return
-        await player.join_channel(author_vc, message.channel)
+        await player.join_channel(author_vc)
 
     elif (msg.lower() == 'disc'):
         if (not player.is_connected()): return
@@ -142,7 +142,7 @@ async def on_message(message):
 
         if (gachi.is_radio):
             gachi.is_radio = False
-        await player.join_channel(author_vc, message.channel)
+        await player.join_channel(author_vc)
         await player.play_async(file_path, is_max_volume)
 
     elif (msg.lower().startswith('search')):
@@ -159,7 +159,7 @@ async def on_message(message):
         file_path = youtube.download_sound(video_id)
         if (gachi.is_radio):
             gachi.is_radio = False
-        await player.join_channel(author_vc, message.channel)
+        await player.join_channel(author_vc)
         await player.play_async(file_path, is_max_volume)
 
     elif (msg.lower() in ['skip', 'stop']):

@@ -18,7 +18,7 @@ class Player:
             raise Exception('Voice client does not exist')
         if (not self.is_connected()):
             raise Exception('Voice client is not connected')
-        if (self.client.is_playing()):
+        if (self.is_playing()):
             self.stop()
 
         audio = PCMVolumeTransformer(
@@ -34,7 +34,7 @@ class Player:
 
             while (True): # post-condition blocking loop
                 time.sleep(1)
-                if (not self.client.is_playing() or file_path != self.current_file):
+                if (self.is_playing() or file_path != self.current_file):
                     break
             if (self.current_file == file_path):
                 self.current_file = None
@@ -48,13 +48,13 @@ class Player:
 
         while (True): # post-condition async loop
             await asyncio.sleep(1)
-            if (not self.client.is_playing() or file_path != self.current_file):
+            if (self.is_playing() or file_path != self.current_file):
                 break
         if (self.current_file == file_path):
             self.current_file = None
             # self.client.stop()
 
-    async def join_channel(self, voice_channel, reconnect=False):
+    async def join_channel(self, voice_channel, reconnect: bool = False):
         if (voice_channel == None): return
         self.channel = voice_channel
 
@@ -72,8 +72,7 @@ class Player:
         self.client.stop()
 
     async def disconnect(self):
-        if (self.client.is_playing()):
-            raise Exception('Can\'t disconnect while something is playing')
-            
         await self.client.disconnect()
         self.client = None
+        self.channel = None
+        self.current_file = None

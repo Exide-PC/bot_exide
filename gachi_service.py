@@ -16,37 +16,30 @@ class GachiService:
     _queue = []
     message_callback = None
 
-    def search(self, search: str) -> []:
-        if (search == None):
+    def search(self, keyword: str) -> []:
+        if (keyword == None):
             return []
 
         return list(filter(
-            lambda g: search.lower() in g['title'].lower(), 
+            lambda g: keyword.lower() in g['title'].lower(), 
             self._gachi_list
         ))
 
-    async def enqueue(self, keyword: str, channel, msg_callback):
+    async def enqueue(self, gachi, channel, msg_callback):
         self.message_callback = msg_callback
         
-        if (keyword != None and len(keyword) > 0):
-            search_results = self.search(keyword)
-        else:
-            search_results = [random.choice(self._gachi_list)]
-            
-        if (len(search_results) == 0):
-            await msg_callback(f'Nothing was found by keyphrase "{keyword}"')
-
-        chosen_gachi = search_results[0] # TODO: Add search results dialog
+        if (gachi == None):
+            gachi = random.choice(self._gachi_list)
 
         async def item_callback():
-            video_id = chosen_gachi['videoId']
+            video_id = gachi['videoId']
             await self._player.join_channel(channel)
-            await msg_callback(f'Now playing: {chosen_gachi["title"]}')
+            await msg_callback(f'Now playing: {gachi["title"]}')
             return youtube.download_sound(video_id)
         self._player.enqueue(item_callback)
 
         if (self._player.is_playing()):
-            await msg_callback(f'{chosen_gachi["title"]} was added to queue')
+            await msg_callback(f'{gachi["title"]} was added to queue')
 
     async def _radio_loop(self):
         # deactivate queue mode while radio is active

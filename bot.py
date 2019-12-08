@@ -7,6 +7,7 @@ from discord.opus import load_opus
 from dotenv import load_dotenv
 import random
 import asyncio
+from youtube import YoutubeService, search
 import youtube
 from player import Player
 from gachi_service import GachiService
@@ -22,6 +23,7 @@ config_update_callback = None
 
 player = None
 gachi = None
+youtube = None
 
 def update_cfg(new_cfg: dict):
     global config
@@ -96,14 +98,26 @@ async def on_message(message):
     elif (msg.lower() == 'gachi stop'):
         gachi.stop()
     
-    elif (msg.lower() == 'gachi help'):
-        await send_message('Commands: gachi [radio,skip,stop,current,*search value*]')
-    
     elif (msg.lower().startswith('gachi')):
         if (author_vc == None):
             return
+
         search_value = msg[len('gachi'):].strip()
-        await gachi.enqueue(search_value, author_vc, send_message)
+        selected_gachi = None
+
+        if (len(search_value) > 0):
+            search_results = gachi.search(search_value)
+            if (len(search_results) == 0):
+                await send_message('Nothing was found :c')
+                return
+
+            options = list(map(lambda g: g['title'], search_results))
+            selected_index = await choice(options, author.id, send_message)
+            if (selected_index == None):
+                return
+            selected_gachi = search_results[selected_index]
+        
+        await gachi.enqueue(selected_gachi, author_vc, send_message)
 
     elif (msg.lower() == 'join'):
         if (author_vc == None): return
@@ -113,36 +127,20 @@ async def on_message(message):
         await player.disconnect()
 
     elif (msg.lower().startswith('play')):
+        if (author_vc == None):
+            return
         parts = list(filter(None, msg.split(' ')))
         if (len(parts) == 1): return
-        if (len(parts) == 2): video_url = parts[1]
-        if (len(parts) == 3): video_url = parts[2]
-
-        matches = re.findall(r'v=[\w-]+', video_url)
-        if (len(matches) != 1):
-            await send_message('Wrong youtube video url')
-            return
-        video_id = matches[0][2:] # skipping v=
-
-        async def item_callback():
-            if (len(parts) == 2):
-                file_path = youtube.download_sound(video_id)
-            elif (len(parts) == 3):
-                try:
-                    file_path = youtube.downlad_and_trunc_sound(video_id, parts[1])
-                except ValueError:
-                    await send_message('Incorrent timecode input')
-                    return
-            await player.join_channel(author_vc)
-            await player.play_async(file_path, is_max_volume)
-
-        if (player.is_playing()):
-            await send_message(f'Your video was added to queue')
-        player.queue.append(item_callback)
+        if (len(parts) == 2):
+            video_url = parts[1]
+        if (len(parts) == 3):
+            time_code = parts[1]
+            video_url = parts[2]
+        await youtube.play(video_url, True, None, author_vc, send_message, is_max_volume, time_code)
 
     elif (msg.lower().startswith('search')):
         query = msg[len('search'):].strip()
-        search_results = youtube.search(query)
+        search_results = search(query)
         if (len(search_results) == 0):
             await send_message('Nothing was found :c')
             return
@@ -152,23 +150,17 @@ async def on_message(message):
         video = search_results[selected_index]
         video_id = video['videoId']
 
-        async def item_callback():
-            await send_message(f'Playing: {video["title"]}')
-            await player.join_channel(author_vc)
-            return youtube.download_sound(video_id)
-
-        if (player.is_playing()):
-            await send_message(f'{video["title"]} was added to queue')
-        player.queue.append(item_callback)
+        await youtube.play(video_id, False, video['title'], author_vc, send_message, is_max_volume)
 
     elif (msg.lower() in ['skip', 'stop']):
         player.skip()
 
 @bot.event
 async def on_ready():
-    global player, gachi
+    global player, gachi, youtube
     player = Player()
     gachi = GachiService(player, config['gachi'])
+    youtube = YoutubeService(player)
 
     prev_voice = bot.guilds[0].get_member(bot.user.id).voice
     if (prev_voice != None):

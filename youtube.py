@@ -3,9 +3,47 @@ import requests
 from requests.models import PreparedRequest
 from dotenv import load_dotenv
 import youtube_dl
+from player import Player
+import re
 
 load_dotenv()
 token = os.getenv('GOOGLE_TOKEN')
+
+class YoutubeService:
+    _player = None
+
+    def __init__(self, player: Player):
+        self._player = player
+
+    async def play(self, source, is_url, title, channel, msg_callback, is_max_volume, time_code=None):
+        video_id = source
+
+        if (is_url):
+            matches = re.findall(r'v=[\w-]+', source)
+            if (len(matches) != 1):
+                await msg_callback('Wrong youtube video url')
+                return
+            video_id = matches[0][2:] # skipping v=
+
+        async def item_callback():
+            if (time_code == None):
+                file_path = download_sound(video_id)
+            else:
+                try:
+                    file_path = downlad_and_trunc_sound(video_id, time_code)
+                except ValueError:
+                    await msg_callback('Incorrent timecode input')
+                    return
+                    
+            if (title != None):
+                await msg_callback(f'Now playing: {title}')
+
+            await self._player.join_channel(channel)
+            await self._player.play_async(file_path, is_max_volume)
+
+        if (self._player.is_playing()):
+            await msg_callback(f'Your video was added to queue')
+        self._player.queue.append(item_callback)
 
 def playlist_items(listId: str) -> []:
     url = "https://www.googleapis.com/youtube/v3/playlistItems"

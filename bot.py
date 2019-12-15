@@ -153,8 +153,17 @@ async def on_message(message):
 
         await youtube.play(video_id, False, video['title'], author_vc, send_message, is_max_volume)
 
-    elif (msg.lower() in ['skip', 'stop']):
-        player.skip()
+    elif (msg.lower() == 'skip'):
+        if (gachi.is_radio):
+            gachi.skip()
+        else:
+            player.skip()
+
+    elif (msg.lower() == 'stop'):
+        if (gachi.is_radio):
+            gachi.stop()
+        else:
+            player.stop()
 
 @bot.event
 async def on_ready():

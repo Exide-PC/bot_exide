@@ -26,15 +26,27 @@ class YoutubeService:
             video_id = matches[0][2:] # skipping v=
 
         async def item_callback():
-            if (time_code == None):
-                file_path = download_sound(video_id)
-            else:
+            attempt_counter = 0
+            file_path = None
+
+            while (attempt_counter < 3):
                 try:
-                    file_path = downlad_and_trunc_sound(video_id, time_code)
-                except ValueError:
-                    await msg_callback('Incorrent timecode input')
-                    return
-                    
+                    if (time_code == None):
+                        file_path = download_sound(video_id)
+                    else:
+                        try:
+                            file_path = downlad_and_trunc_sound(video_id, time_code)
+                        except ValueError:
+                            await msg_callback('Incorrent timecode input')
+                            return
+                    break
+                except Exception:
+                    attempt_counter += 1
+
+            if (file_path == None):
+                await msg_callback(f'Download failed after {attempt_counter} retries :c')
+                return
+                
             if (title != None):
                 await msg_callback(f'Now playing: {title}')
 

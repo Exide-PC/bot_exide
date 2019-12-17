@@ -64,6 +64,7 @@ async def on_voice_state_update(member, before, after):
     exide = bot.guilds[0].get_member(exide_id)
     shved = bot.guilds[0].get_member(shved_id)
 
+    if (before.channel == None or after.channel == None): return
     if (member.id != exide_id or shved == None): return
     if (before.channel.name == after.channel.name): return
     if ('Бочка' not in after.channel.name and 'AFK' not in after.channel.name): return

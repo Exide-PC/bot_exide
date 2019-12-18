@@ -101,7 +101,7 @@ async def on_message(message):
     author = bot.guilds[0].get_member(message.author.id)
     author_vc = author.voice.channel if author.voice != None else None
     
-    msg = message.content
+    msg = message.content.lower()
     global player
 
     if (msg.lower() == 'gachi radio'):
@@ -110,13 +110,13 @@ async def on_message(message):
         await player.join_channel(author_vc)
         gachi.radio(send_message)
     
-    elif (msg.lower() == 'gachi skip'):
+    elif (msg == 'gachi skip'):
         gachi.skip()
     
-    elif (msg.lower() == 'gachi stop'):
+    elif (msg == 'gachi stop'):
         gachi.stop()
     
-    elif (msg.lower().startswith('gachi')):
+    elif (msg.startswith('gachi')):
         if (author_vc == None):
             return
 
@@ -137,14 +137,14 @@ async def on_message(message):
         
         await gachi.enqueue(selected_gachi, author_vc, send_message)
 
-    elif (msg.lower() == 'join'):
+    elif (msg == 'join'):
         if (author_vc == None): return
         await player.join_channel(author_vc)
 
-    elif (msg.lower() == 'disc'):
+    elif (msg == 'disc'):
         await player.disconnect()
 
-    elif (msg.lower().startswith('play')):
+    elif (msg.startswith('play')):
         if (author_vc == None):
             return
         parts = list(filter(None, msg.split(' ')))
@@ -157,7 +157,7 @@ async def on_message(message):
             video_url = parts[2]
         await youtube.play(video_url, True, None, author_vc, send_message, is_max_volume, time_code)
 
-    elif (msg.lower().startswith('search')):
+    elif (msg.startswith('search')):
         query = msg[len('search'):].strip()
         search_results = search(query)
         if (len(search_results) == 0):
@@ -171,19 +171,19 @@ async def on_message(message):
 
         await youtube.play(video_id, False, video['title'], author_vc, send_message, is_max_volume)
 
-    elif (msg.lower() == 'skip'):
+    elif (msg == 'skip'):
         if (gachi.is_radio):
             gachi.skip()
         else:
             player.skip()
 
-    elif (msg.lower() == 'stop'):
+    elif (msg == 'stop'):
         if (gachi.is_radio):
             gachi.stop()
         else:
             player.stop()
 
-    elif (msg.lower() == 'repeat'):
+    elif (msg == 'repeat'):
         is_repeat = not player.is_repeat_mode
         await send_message(f'Repeat: {"On" if is_repeat else "Off"}')
         player.is_repeat_mode = is_repeat

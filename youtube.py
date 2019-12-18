@@ -51,7 +51,7 @@ class YoutubeService:
                 await msg_callback(f'Now playing: {title}')
 
             await self._player.join_channel(channel)
-            await self._player.play_async(file_path, is_max_volume)
+            return file_path
 
         if (self._player.is_playing()):
             await msg_callback(f'Your video was added to queue')

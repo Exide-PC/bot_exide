@@ -183,6 +183,11 @@ async def on_message(message):
         else:
             player.stop()
 
+    elif (msg.lower() == 'repeat'):
+        is_repeat = not player.is_repeat_mode
+        await send_message(f'Repeat: {"On" if is_repeat else "Off"}')
+        player.is_repeat_mode = is_repeat
+
 @bot.event
 async def on_ready():
     global player, gachi, youtube

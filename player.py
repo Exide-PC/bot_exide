@@ -40,7 +40,6 @@ class Voice:
                 break
         if (self.current_file == file_path):
             self.current_file = None
-            # self.client.stop()
 
     async def join_channel(self, voice_channel, reconnect: bool = False):
         if (voice_channel == None): return
@@ -70,6 +69,7 @@ class Voice:
 
 class Player(Voice):
     is_queue_mode = True
+    is_repeat_mode = False
     queue = []
 
     def __init__(self):
@@ -81,8 +81,12 @@ class Player(Voice):
             while (self.is_queue_mode and (len(self.queue) > 0)):
                 item_callback = self.queue.pop(0)
                 file_path = await item_callback()
-                if (file_path != None):
+                if (file_path == None): continue
+
+                # post-condition loop to play music at least one
+                while (True):
                     await self.play_async(file_path)
+                    if (not self.is_repeat_mode): break
             await asyncio.sleep(1)
 
     def enqueue(self, item_callback):

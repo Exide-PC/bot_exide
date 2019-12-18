@@ -95,6 +95,8 @@ async def on_message(message):
     if (message.content.lower() == 'knock'):
         message.content = 'play https://www.youtube.com/watch?v=ir-pKzGsKPQ'
         is_max_volume = True
+    if (message.content.lower() == 'sax'):
+        message.content = 'play https://www.youtube.com/watch?v=uiDVSYa8IPw'
 
     # we also need the 'voice' property which is not being
     # passed in case the message was received via PM

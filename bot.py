@@ -149,7 +149,7 @@ async def on_message(message):
     elif (msg.startswith('play')):
         if (author_vc == None):
             return
-        parts = list(filter(None, msg.split(' ')))
+        parts = list(filter(None, message.content.split(' ')))
         time_code = None
         if (len(parts) == 1): return
         if (len(parts) == 2):

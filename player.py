@@ -93,4 +93,8 @@ class Player(Voice):
         self.queue.append(item_callback)
 
     def skip(self):
-        self.stop()
+        super().stop()
+
+    def stop(self):
+        self.queue.clear()
+        super().stop()

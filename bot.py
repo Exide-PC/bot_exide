@@ -83,8 +83,6 @@ async def on_message(message):
     async def send_message(msg: str):
         await message.channel.send(msg)
 
-    is_max_volume = False
-
     # message preprocessing to handle shortcuts
     if (message.content.lower() == 'gachi depression'):
         message.content = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
@@ -94,7 +92,6 @@ async def on_message(message):
         message.content = 'play https://www.youtube.com/watch?v=zxriE8aVY1M'
     if (message.content.lower() == 'knock'):
         message.content = 'play https://www.youtube.com/watch?v=ir-pKzGsKPQ'
-        is_max_volume = True
     if (message.content.lower() == 'sax'):
         message.content = 'play https://www.youtube.com/watch?v=uiDVSYa8IPw'
 
@@ -149,15 +146,8 @@ async def on_message(message):
     elif (msg.startswith('play')):
         if (author_vc == None):
             return
-        parts = list(filter(None, message.content.split(' ')))
-        time_code = None
-        if (len(parts) == 1): return
-        if (len(parts) == 2):
-            video_url = parts[1]
-        if (len(parts) == 3):
-            time_code = parts[1]
-            video_url = parts[2]
-        await youtube.play(video_url, True, None, author_vc, send_message, is_max_volume, time_code)
+        cmd = message.content[len('play') + 1:]
+        await youtube.parse_cmd(cmd, author_vc, send_message)
 
     elif (msg.startswith('search')):
         query = msg[len('search'):].strip()
@@ -170,14 +160,23 @@ async def on_message(message):
             return
         video = search_results[selected_index]
         video_id = video['videoId']
-
-        await youtube.play(video_id, False, video['title'], author_vc, send_message, is_max_volume)
+        youtube.enqueue(video_id, video['title'], author_vc, send_message)
 
     elif (msg == 'skip'):
         if (gachi.is_radio):
             gachi.skip()
         else:
             player.skip()
+
+    elif (msg.startswith('skip')):
+        index = msg[len('skip'):].strip()
+        if (len(index) == 0):
+            return
+        # we dont remove actually needed item
+        final_index = int(index) - 1
+        player.queue = player.queue[final_index:]
+        player.skip()
+        await send_message(f'Skipped to item #{final_index + 1}')
 
     elif (msg == 'stop'):
         if (gachi.is_radio):

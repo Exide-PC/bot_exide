@@ -4,6 +4,7 @@ from requests.models import PreparedRequest
 from dotenv import load_dotenv
 import youtube_dl
 from player import Player
+from urllib.parse import urlparse, parse_qs
 import re
 
 load_dotenv()
@@ -15,16 +16,55 @@ class YoutubeService:
     def __init__(self, player: Player):
         self._player = player
 
-    async def play(self, source, is_url, title, channel, msg_callback, is_max_volume, time_code=None):
-        video_id = source
+    async def parse_cmd(self, cmd, channel, msg_callback):
+        parts = list(filter(None, cmd.split(' ')))
+        if (len(parts) == 0):
+            return
 
-        if (is_url):
-            matches = re.findall(r'v=[\w-]+', source)
-            if (len(matches) != 1):
-                await msg_callback('Wrong youtube video url')
-                return
-            video_id = matches[0][2:] # skipping v=
+        video_url = None
+        time_code = None
 
+        if (len(parts) == 1):
+            video_url = parts[0]
+        if (len(parts) == 2):
+            time_code = parts[0]
+            video_url = parts[1]
+
+        # 00:15 https://www.youtube.com/watch?v=tFwcBdHXNOQ
+        # https://www.youtube.com/playlist?list=PL0gU26yd_WJtO4z6KCXxrLlQlYaqnvXZF
+        # https://www.youtube.com/watch?v=tFwcBdHXNOQ&list=PL0gU26yd_WJtO4z6KCXxrLlQlYaqnvXZF&index=1
+
+        parsed_url = urlparse(video_url)
+        query = parse_qs(parsed_url.query)
+
+        video_id = query.get('v')
+        playlist = query.get('list')
+        index = query.get('index')
+
+        if (playlist == None and video_id == None):
+            await msg_callback('Wrong url')
+
+        # only video id was found
+        if (playlist == None):
+            self.enqueue(video_id[0], None, channel, msg_callback, time_code)
+            if (self._player.is_playing()):
+                await msg_callback(f'Your video was added to queue')
+            return
+
+        index = int(index[0]) - 2 if index != None else 0
+        items = playlist_items(playlist[0])[index:]
+
+        for i in range(len(items)):
+            item = items[i]
+            self.enqueue(
+                item['videoId'],
+                f'{item["title"]} (#{index + i + 1} in playlist)',
+                channel,
+                msg_callback
+            )
+        await msg_callback(f'Enqueued {len(items)} playlist items :>')
+
+    def enqueue(self, video_id, title, channel, msg_callback, time_code=None):
         async def item_callback():
             attempt_counter = 0
             file_path = None
@@ -53,9 +93,8 @@ class YoutubeService:
             await self._player.join_channel(channel)
             return file_path
 
-        if (self._player.is_playing()):
-            await msg_callback(f'Your video was added to queue')
         self._player.queue.append(item_callback)
+
 
 def playlist_items(listId: str) -> []:
     url = "https://www.googleapis.com/youtube/v3/playlistItems"

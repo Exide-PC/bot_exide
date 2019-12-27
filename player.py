@@ -76,6 +76,7 @@ class Player(Voice):
     is_queue_mode = True
     is_repeat_mode = False
     queue = []
+    current_item = None
 
     def __init__(self):
         super().__init__()
@@ -84,14 +85,16 @@ class Player(Voice):
     async def _loop(self):
         while (True):
             while (self.is_queue_mode and (len(self.queue) > 0)):
-                item = self.queue.pop(0)
-                file_path = await item.path_callback()
+                self.current_item = self.queue.pop(0)
+                file_path = await self.current_item.path_callback()
                 if (file_path == None): continue
 
                 # post-condition loop to play music at least one
                 while (True):
                     await self.play_async(file_path)
                     if (not self.is_repeat_mode): break
+                    
+            self.current_item = None
             await asyncio.sleep(1)
 
     def enqueue(self, path_callback, title):
@@ -99,8 +102,9 @@ class Player(Voice):
         self.queue.append(item)
 
     def skip(self):
+        self.current_item = None
         super().stop()
 
     def stop(self):
         self.queue.clear()
-        super().stop()
+        self.skip()

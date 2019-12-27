@@ -191,12 +191,16 @@ async def on_message(message):
 
     elif (msg == 'queue'):
         items = player.queue
-        queue = ''
+        if (player.current_item == None):
+            queue = 'Nothing is being played currently\n'
+        else:
+            queue = f'Currently playing: {player.current_item.title}\n'
+
         for i in range(len(items)): # 01234
             if (len(queue) > 1000):
-                queue += f'... {len(items) - i + 1} more\n'
+                queue += f'\n... {len(items) - i + 1} more'
                 break
-            queue += f'{i + 1}. {items[i].title}\n'
+            queue += f'\n{i + 1}. {items[i].title}'
         await send_message(queue)
 
 @bot.event

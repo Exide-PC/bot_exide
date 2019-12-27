@@ -31,15 +31,17 @@ class GachiService:
         if (gachi == None):
             gachi = random.choice(self._gachi_list)
 
+        video_id = gachi['videoId']
+        title = gachi["title"]
+
         async def item_callback():
-            video_id = gachi['videoId']
             await self._player.join_channel(channel)
-            await msg_callback(f'Now playing: {gachi["title"]}')
+            await msg_callback(f'Now playing: {title}')
             return youtube.download_sound(video_id)
-        self._player.enqueue(item_callback)
+        self._player.enqueue(item_callback, title)
 
         if (self._player.is_playing()):
-            await msg_callback(f'{gachi["title"]} was added to queue')
+            await msg_callback(f'{title} was added to queue')
 
     async def _radio_loop(self):
         # deactivate queue mode while radio is active

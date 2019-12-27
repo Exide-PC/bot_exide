@@ -65,6 +65,9 @@ class YoutubeService:
         await msg_callback(f'Enqueued {len(items)} playlist items :>')
 
     def enqueue(self, video_id, title, channel, msg_callback, time_code=None):
+        if (title == None):
+            title = f'Video #{video_id}'
+            
         async def item_callback():
             attempt_counter = 0
             file_path = None
@@ -86,14 +89,12 @@ class YoutubeService:
             if (file_path == None):
                 await msg_callback(f'Download failed after {attempt_counter} retries :c')
                 return
-                
-            if (title != None):
-                await msg_callback(f'Now playing: {title}')
-
+            
+            await msg_callback(f'Now playing: {title}')
             await self._player.join_channel(channel)
             return file_path
 
-        self._player.queue.append(item_callback)
+        self._player.enqueue(item_callback, title)
 
 
 def playlist_items(listId: str) -> []:

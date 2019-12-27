@@ -5,6 +5,11 @@ from discord.voice_client import VoiceClient
 from threading import Thread
 from discord.player import PCMVolumeTransformer
 
+class Item:
+    def __init__(self, path_callback, title):
+        self.path_callback = path_callback
+        self.title = title
+
 class Voice:
     client = None
     channel = None
@@ -79,8 +84,8 @@ class Player(Voice):
     async def _loop(self):
         while (True):
             while (self.is_queue_mode and (len(self.queue) > 0)):
-                item_callback = self.queue.pop(0)
-                file_path = await item_callback()
+                item = self.queue.pop(0)
+                file_path = await item.path_callback()
                 if (file_path == None): continue
 
                 # post-condition loop to play music at least one
@@ -89,8 +94,9 @@ class Player(Voice):
                     if (not self.is_repeat_mode): break
             await asyncio.sleep(1)
 
-    def enqueue(self, item_callback):
-        self.queue.append(item_callback)
+    def enqueue(self, path_callback, title):
+        item = Item(path_callback, title)
+        self.queue.append(item)
 
     def skip(self):
         super().stop()

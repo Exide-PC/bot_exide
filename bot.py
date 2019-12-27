@@ -189,6 +189,16 @@ async def on_message(message):
         await send_message(f'Repeat: {"On" if is_repeat else "Off"}')
         player.is_repeat_mode = is_repeat
 
+    elif (msg == 'queue'):
+        items = player.queue
+        queue = ''
+        for i in range(len(items)): # 01234
+            if (len(queue) > 1000):
+                queue += f'... {len(items) - i + 1} more\n'
+                break
+            queue += f'{i + 1}. {items[i].title}\n'
+        await send_message(queue)
+
 @bot.event
 async def on_ready():
     global player, gachi, youtube

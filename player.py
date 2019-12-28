@@ -108,3 +108,7 @@ class Player(Voice):
     def stop(self):
         self.queue.clear()
         self.skip()
+
+    async def disconnect(self):
+        self.stop()
+        await super().disconnect()

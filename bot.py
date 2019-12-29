@@ -58,20 +58,22 @@ async def choice(options: [], user_id, message_callback):
 
 @bot.event
 async def on_voice_state_update(member, before, after):
-    exide_id = 286920219912306688
-    shved_id = 402848249658081307
-
-    exide = bot.guilds[0].get_member(exide_id)
-    shved = bot.guilds[0].get_member(shved_id)
+    protected_members = [
+        286920219912306688,
+        229987174857179136
+    ]
+    shved = bot.guilds[0].get_member(
+        402848249658081307
+    )
 
     if (before.channel == None or after.channel == None): return
-    if (member.id != exide_id or shved == None): return
+    if (member.id not in protected_members or shved.voice == None): return
     if (before.channel.name == after.channel.name): return
     if ('Бочка' not in after.channel.name and 'AFK' not in after.channel.name): return
 
     after_copy = after.channel # after arguments mutates somehow, idk why
 
-    await exide.move_to(before.channel)
+    await member.move_to(before.channel)
     await shved.move_to(after_copy)
 
 @bot.event

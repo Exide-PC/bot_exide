@@ -11,29 +11,36 @@ class Item:
         self.title = title
 
 class Voice:
-    client = None
-    channel = None
+    bot = None
     current_file = None
 
-    def is_connected(self): return self.client != None and self.client.is_connected()
-    def is_playing(self): return self.is_connected() and self.client.is_playing()
+    def __init__(self, bot):
+        self.bot = bot
+
+    def is_connected(self): return len(self.bot.voice_clients) == 1
+    def is_playing(self): return self.is_connected() and self._get_client().is_playing()
+
+    def _get_client(self):
+        if (not self.is_connected()):
+            return None
+        return self.bot.voice_clients[0]
 
     async def _play(self, file_path: str, is_max_volume=False):
-        if (self.client == None):
-            raise Exception('Voice client does not exist')
         if (not self.is_connected()):
             raise Exception('Voice client is not connected')
-        if (self.is_playing()):
-            self.stop()
+
+        client = self._get_client()
+        if (client.is_playing()):
+            client.stop()
 
         audio = PCMVolumeTransformer(
             discord.FFmpegPCMAudio(file_path), 
             2 if is_max_volume else 1
         )
         self.current_file = file_path
-        self.client.play(audio)
+        client.play(audio)
 
-        while (not self.is_playing()):
+        while (not client.is_playing()):
             await asyncio.sleep(100)
 
     async def play_async(self, file_path: str, is_max_volume=False):
@@ -48,28 +55,25 @@ class Voice:
 
     async def join_channel(self, voice_channel, reconnect: bool = False):
         if (voice_channel == None): return
-        self.channel = voice_channel
 
         if (not self.is_connected()):
             if (reconnect):
                 prev_client = await voice_channel.connect()
                 await prev_client.disconnect()
-            voice_client = await voice_channel.connect()
-            self.client = voice_client
+            await voice_channel.connect(reconnect=True)
         else:
-            await self.client.move_to(voice_channel)
+            await self._get_client().move_to(voice_channel)
 
     def stop(self):
         self.current_file = None
-        self.client.stop()
+        self._get_client().stop()
 
     async def disconnect(self):
-        if (not self.is_connected()):
+        client = self._get_client()
+        if (client == None):
             return
 
-        await self.client.disconnect()
-        self.client = None
-        self.channel = None
+        await client.disconnect()
         self.current_file = None
 
 class Player(Voice):
@@ -78,8 +82,8 @@ class Player(Voice):
     queue = []
     current_item = None
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, bot):
+        super().__init__(bot)
         asyncio.create_task(self._loop())
         
     async def _loop(self):

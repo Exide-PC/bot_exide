@@ -208,7 +208,7 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     global player, gachi, youtube
-    player = Player()
+    player = Player(bot)
     gachi = GachiService(player, config['gachi'])
     youtube = YoutubeService(player)
 

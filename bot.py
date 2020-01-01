@@ -108,8 +108,7 @@ async def on_message(message):
     if (msg.lower() == 'gachi radio'):
         if (author_vc == None):
             return
-        await player.join_channel(author_vc)
-        gachi.radio(send_message)
+        await gachi.radio(author_vc, send_message)
     
     elif (msg == 'gachi skip'):
         gachi.skip()

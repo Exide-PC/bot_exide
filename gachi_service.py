@@ -57,10 +57,17 @@ class GachiService:
             await asyncio.sleep(1)
         self._player.is_queue_mode = True
 
-    def radio(self, message_callback=None):
-        self.message_callback = message_callback
-        self.is_radio = True
-        asyncio.create_task(self._radio_loop())
+    async def radio(self, channel, message_callback=None):
+        is_radio = not self.is_radio
+        await message_callback(f'Gachi radio is {"On" if is_radio else "Off"}')
+
+        if (is_radio):
+            await self._player.join_channel(channel)
+            self.message_callback = message_callback
+            asyncio.create_task(self._radio_loop())
+        else:
+            self.stop()
+        self.is_radio = is_radio
 
     def skip(self):
         self._player.skip()

@@ -168,20 +168,41 @@ def download_sound(video_id: str) -> str:
 
     return file_name
 
-def downlad_and_trunc_sound(video_id: str, start: str) -> str:
+def downlad_and_trunc_sound(video_id: str, time_code: str) -> str:
     file_path = download_sound(video_id)
-    return _trunc(file_path, start)
+    return _trunc(file_path, time_code)
 
-def _trunc(file_path: str, start: str) -> str:
-    parts = start.split(':')
-    minute, second = f'{int(parts[0]):02}', f'{int(parts[1]):02}'
+def _trunc(file_path: str, time_code: str) -> str:
+    to_specified = '-' in time_code
+    if (to_specified):
+        left = time_code.split('-')[0]
+        right = time_code.split('-')[1]
+    else:
+        left = time_code
 
-    cut_file = "{0}_{2}.{1}".format(*file_path.rsplit('.', 1) + [f'{minute}-{second}'])
+    file_suffix = ''
+    args = ''
+    
+    minute, second = _extract(left)
+    file_suffix += f'{minute}-{second}'
+    args += f'-ss 00:{minute}:{second}'
+
+    if (to_specified):
+        minute, second = _extract(right)
+        file_suffix += f'_{minute}-{second}'
+        args += f' -to 00:{minute}:{second}'
+
+    cut_file = "{0}_{2}.{1}".format(*file_path.rsplit('.', 1) + [file_suffix])
 
     if (not os.path.exists(cut_file)):
-        os.system(f"ffmpeg -i {file_path} -ss 00:{minute}:{second} {cut_file}")
+        os.system(f"ffmpeg -i {file_path} {args} {cut_file}")
 
     return cut_file
+
+def _extract(string: str):
+    parts = string.split(':')
+    minute, second = f'{int(parts[0]):02}', f'{int(parts[1]):02}'
+    return minute, second
 
 if (__name__ == '__main__'):
     _trunc('music/7wtfhZwyrcc.webm', '1:01')

@@ -66,7 +66,9 @@ class Voice:
 
     def stop(self):
         self.current_file = None
-        self._get_client().stop()
+        client = self._get_client()
+        if (client == None): return
+        client.stop()
 
     async def disconnect(self):
         client = self._get_client()

@@ -6,6 +6,7 @@ import youtube_dl
 from player import Player
 from urllib.parse import urlparse, parse_qs
 import re
+import html
 
 load_dotenv()
 token = os.getenv('GOOGLE_TOKEN')
@@ -66,7 +67,7 @@ class YoutubeService:
 
     def enqueue(self, video_id, title, channel, msg_callback, time_code=None):
         if (title == None):
-            title = f'Video #{video_id}'
+            title = f'#{video_id}'
             
         async def item_callback():
             attempt_counter = 0
@@ -119,7 +120,7 @@ def playlist_items(listId: str) -> []:
         for item in json['items']:
             videos.append({
                 'videoId': item['contentDetails']['videoId'],
-                'title': item['snippet']['title']
+                'title': html.unescape(item['snippet']['title'])
             })
 
         if (nextPageToken == None):
@@ -146,7 +147,7 @@ def search(query: str):
         if (not item['id'].get('videoId')): continue
         results.append({
             'videoId': item['id']['videoId'],
-            'title': item['snippet']['title']
+            'title': html.unescape(item['snippet']['title'])
         })
 
     return results

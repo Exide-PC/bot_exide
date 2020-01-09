@@ -12,6 +12,7 @@ import youtube
 from player import Player
 from gachi_service import GachiService
 import re
+import logging
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -78,131 +79,137 @@ async def on_voice_state_update(member, before, after):
 
 @bot.event
 async def on_message(message):
-    if (message.channel.type.name != 'private' and 
-        message.channel.name != 'bot-exide' or
-        message.author == bot.user): return
+    try:
+        if (message.channel.type.name != 'private' and 
+            message.channel.name != 'bot-exide' or
+            message.author == bot.user): return
 
-    async def send_message(msg: str):
-        await message.channel.send(msg)
+        async def send_message(msg: str):
+            logging.info(f'Sending message "{msg}"')
+            await message.channel.send(msg)
 
-    # message preprocessing to handle shortcuts
-    if (message.content.lower() == 'gachi depression'):
-        message.content = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
-    if (message.content.lower() == 'kekw'):
-        message.content = 'play https://www.youtube.com/watch?v=7wivOEXlL9s'
-    if (message.content.lower() == 'fits'):
-        message.content = 'play https://www.youtube.com/watch?v=zxriE8aVY1M'
-    if (message.content.lower() == 'knock'):
-        message.content = 'play https://www.youtube.com/watch?v=ir-pKzGsKPQ'
-    if (message.content.lower() == 'sax'):
-        message.content = 'play https://www.youtube.com/watch?v=uiDVSYa8IPw'
+        # message preprocessing to handle shortcuts
+        if (message.content.lower() == 'gachi depression'):
+            message.content = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
+        if (message.content.lower() == 'kekw'):
+            message.content = 'play https://www.youtube.com/watch?v=7wivOEXlL9s'
+        if (message.content.lower() == 'fits'):
+            message.content = 'play https://www.youtube.com/watch?v=zxriE8aVY1M'
+        if (message.content.lower() == 'knock'):
+            message.content = 'play https://www.youtube.com/watch?v=ir-pKzGsKPQ'
+        if (message.content.lower() == 'sax'):
+            message.content = 'play https://www.youtube.com/watch?v=uiDVSYa8IPw'
 
-    # we also need the 'voice' property which is not being
-    # passed in case the message was received via PM
-    author = bot.guilds[0].get_member(message.author.id)
-    author_vc = author.voice.channel if author.voice != None else None
-    
-    msg = message.content.lower()
-    global player
+        # we also need the 'voice' property which is not being
+        # passed in case the message was received via PM
+        author = bot.guilds[0].get_member(message.author.id)
+        author_vc = author.voice.channel if author.voice != None else None
+        
+        msg = message.content.lower()
+        logging.info(f'Executing command "{msg}"')
+        global player
 
-    if (msg.lower() == 'gachi radio'):
-        if (author_vc == None):
-            return
-        await gachi.radio(author_vc, send_message)
-    
-    elif (msg == 'gachi skip'):
-        gachi.skip()
-    
-    elif (msg == 'gachi stop'):
-        gachi.stop()
-    
-    elif (msg.startswith('gachi')):
-        if (author_vc == None):
-            return
+        if (msg.lower() == 'gachi radio'):
+            if (author_vc == None):
+                return
+            await gachi.radio(author_vc, send_message)
+        
+        elif (msg == 'gachi skip'):
+            gachi.skip()
+        
+        elif (msg == 'gachi stop'):
+            gachi.stop()
+        
+        elif (msg.startswith('gachi')):
+            if (author_vc == None):
+                return
 
-        search_value = msg[len('gachi'):].strip()
-        selected_gachi = None
+            search_value = msg[len('gachi'):].strip()
+            selected_gachi = None
 
-        if (len(search_value) > 0):
-            search_results = gachi.search(search_value)
+            if (len(search_value) > 0):
+                search_results = gachi.search(search_value)
+                if (len(search_results) == 0):
+                    await send_message('Nothing was found :c')
+                    return
+
+                options = list(map(lambda g: g['title'], search_results))
+                selected_index = await choice(options, author.id, send_message)
+                if (selected_index == None):
+                    return
+                selected_gachi = search_results[selected_index]
+            
+            await gachi.enqueue(selected_gachi, author_vc, send_message)
+
+        elif (msg == 'join'):
+            if (author_vc == None): return
+            await player.join_channel(author_vc)
+
+        elif (msg == 'disc'):
+            await player.disconnect()
+
+        elif (msg.startswith('play')):
+            if (author_vc == None):
+                return
+            cmd = message.content[len('play') + 1:]
+            await youtube.parse_cmd(cmd, author_vc, send_message)
+
+        elif (msg.startswith('search')):
+            query = msg[len('search'):].strip()
+            search_results = search(query)
             if (len(search_results) == 0):
                 await send_message('Nothing was found :c')
                 return
-
-            options = list(map(lambda g: g['title'], search_results))
-            selected_index = await choice(options, author.id, send_message)
+            selected_index = await choice(list(map(lambda v: v['title'], search_results)), author.id, send_message)
             if (selected_index == None):
                 return
-            selected_gachi = search_results[selected_index]
-        
-        await gachi.enqueue(selected_gachi, author_vc, send_message)
+            video = search_results[selected_index]
+            video_id = video['videoId']
+            youtube.enqueue(video_id, video['title'], author_vc, send_message)
 
-    elif (msg == 'join'):
-        if (author_vc == None): return
-        await player.join_channel(author_vc)
+        elif (msg == 'skip'):
+            if (gachi.is_radio):
+                gachi.skip()
+            else:
+                player.skip()
 
-    elif (msg == 'disc'):
-        await player.disconnect()
-
-    elif (msg.startswith('play')):
-        if (author_vc == None):
-            return
-        cmd = message.content[len('play') + 1:]
-        await youtube.parse_cmd(cmd, author_vc, send_message)
-
-    elif (msg.startswith('search')):
-        query = msg[len('search'):].strip()
-        search_results = search(query)
-        if (len(search_results) == 0):
-            await send_message('Nothing was found :c')
-            return
-        selected_index = await choice(list(map(lambda v: v['title'], search_results)), author.id, send_message)
-        if (selected_index == None):
-            return
-        video = search_results[selected_index]
-        video_id = video['videoId']
-        youtube.enqueue(video_id, video['title'], author_vc, send_message)
-
-    elif (msg == 'skip'):
-        if (gachi.is_radio):
-            gachi.skip()
-        else:
+        elif (msg.startswith('skip')):
+            index = msg[len('skip'):].strip()
+            if (len(index) == 0):
+                return
+            # we dont remove actually needed item
+            final_index = int(index) - 1
+            player.queue = player.queue[final_index:]
             player.skip()
+            await send_message(f'Skipped to item #{final_index + 1}')
 
-    elif (msg.startswith('skip')):
-        index = msg[len('skip'):].strip()
-        if (len(index) == 0):
-            return
-        # we dont remove actually needed item
-        final_index = int(index) - 1
-        player.queue = player.queue[final_index:]
-        player.skip()
-        await send_message(f'Skipped to item #{final_index + 1}')
+        elif (msg == 'stop'):
+            if (gachi.is_radio):
+                gachi.stop()
+            else:
+                player.stop()
 
-    elif (msg == 'stop'):
-        if (gachi.is_radio):
-            gachi.stop()
-        else:
-            player.stop()
+        elif (msg == 'repeat'):
+            is_repeat = not player.is_repeat_mode
+            await send_message(f'Repeat: {"On" if is_repeat else "Off"}')
+            player.is_repeat_mode = is_repeat
 
-    elif (msg == 'repeat'):
-        is_repeat = not player.is_repeat_mode
-        await send_message(f'Repeat: {"On" if is_repeat else "Off"}')
-        player.is_repeat_mode = is_repeat
+        elif (msg == 'queue'):
+            items = player.queue
+            if (player.current_item == None):
+                queue = 'Nothing is being played currently\n'
+            else:
+                queue = f'Currently playing: {player.current_item.title}\n'
 
-    elif (msg == 'queue'):
-        items = player.queue
-        if (player.current_item == None):
-            queue = 'Nothing is being played currently\n'
-        else:
-            queue = f'Currently playing: {player.current_item.title}\n'
-
-        for i in range(len(items)): # 01234
-            if (len(queue) > 1000):
-                queue += f'\n... {len(items) - i + 1} more'
-                break
-            queue += f'\n{i + 1}. {items[i].title}'
-        await send_message(queue)
+            for i in range(len(items)):
+                if (len(queue) > 1000):
+                    queue += f'\n... {len(items) - i + 1} more'
+                    break
+                queue += f'\n{i + 1}. {items[i].title}'
+            await send_message(queue)
+    except Exception as e:
+        logging.exception(e)
+        
 
 @bot.event
 async def on_ready():
@@ -215,7 +222,7 @@ async def on_ready():
     if (prev_voice != None):
         await player.join_channel(prev_voice.channel, True)
 
-    print(f'{bot.user} has connected\n')
+    logging.info(f'{bot.user} has connected')
 
 def start(token: str, cfg: dict, cfg_update_callback):
     global config, config_update_callback

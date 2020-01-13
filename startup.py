@@ -24,7 +24,7 @@ def set_logger():
     rootLogger = logging.getLogger()
     rootLogger.setLevel(logging.DEBUG)
 
-    fileHandler = logging.FileHandler('log.txt')
+    fileHandler = logging.FileHandler('log.txt', 'a', 'utf-8')
     fileHandler.addFilter(logFilter)
     fileHandler.setFormatter(logFormatter)
     rootLogger.addHandler(fileHandler)

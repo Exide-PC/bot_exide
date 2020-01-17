@@ -221,7 +221,7 @@ async def on_message(message):
             await send_message(queue)
         
         elif (msg.startswith('alias')):
-            args = msg[len('alias'):].strip()
+            args = message.content[len('alias'):].strip()
             separator = args.find(' ')
             if (separator == -1):
                 await send_message('Wrong alias syntax. Use "alias <alias> <replacer>"')

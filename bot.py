@@ -31,6 +31,13 @@ def update_cfg(new_cfg: dict):
     config_update_callback(new_cfg)
     config = new_cfg
 
+def add_alias(cmd: str, replacer: str):
+    global config
+    config['aliases'].append([
+        cmd, replacer
+    ])
+    update_cfg(config)
+
 async def choice(options: [], user_id, message_callback):
     choice_hint = ""
     for i in range(len(options)):
@@ -88,6 +95,11 @@ async def on_message(message):
             logging.info(f'Sending message "{msg}"')
             await message.channel.send(msg)
 
+        for alias in config['aliases']:
+            if (alias[0].lower() == message.content.lower()):
+                message.content = alias[1]
+                logging.info(f'Found suitable alias. Replacing "{alias[0]}" with "{alias[1]}"')
+
         # message preprocessing to handle shortcuts
         if (message.content.lower() == 'gachi depression'):
             message.content = 'play https://www.youtube.com/watch?v=nbzFQD2Q3rs'
@@ -106,7 +118,7 @@ async def on_message(message):
         author_vc = author.voice.channel if author.voice != None else None
         
         msg = message.content.lower()
-        logging.info(f'Executing command "{msg}"')
+        logging.info(f'{author.display_name} is executing command "{msg}"')
         global player
 
         if (msg.lower() == 'gachi radio'):
@@ -207,6 +219,17 @@ async def on_message(message):
                     break
                 queue += f'\n{i + 1}. {items[i].title}'
             await send_message(queue)
+        
+        elif (msg.startswith('alias')):
+            args = msg[len('alias'):].strip()
+            separator = args.find(' ')
+            if (separator == -1):
+                await send_message('Wrong alias syntax. Use "alias <alias> <replacer>"')
+                return
+            alias = args[:separator] # 012 456
+            replacer = args[separator + 1:]
+            add_alias(alias, replacer)
+            await send_message(f'Alias "{alias} -> {replacer}" has been successfully added')
     except Exception as e:
         logging.exception(e)
         

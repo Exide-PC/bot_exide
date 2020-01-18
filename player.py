@@ -4,7 +4,7 @@ import time
 from discord.voice_client import VoiceClient
 from threading import Thread
 from discord.player import PCMVolumeTransformer
-
+import logging
 class Item:
     def __init__(self, path_callback, title):
         self.path_callback = path_callback
@@ -92,8 +92,12 @@ class Player(Voice):
         while (True):
             while (self.is_queue_mode and (len(self.queue) > 0)):
                 self.current_item = self.queue.pop(0)
+                logging.info(f'Dequeued item {self.current_item.title}')
+
                 file_path = await self.current_item.path_callback()
-                if (file_path == None): continue
+                logging.info(f'Received file path: {file_path if file_path != None else "None"}')
+                if (file_path == None):
+                    continue
 
                 # post-condition loop to play music at least one
                 while (True):

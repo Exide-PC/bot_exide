@@ -226,10 +226,10 @@ async def on_message(message):
             if (separator == -1):
                 await send_message('Wrong alias syntax. Use "alias <alias> <replacer>"')
                 return
-            alias = args[:separator] # 012 456
+            alias = args[:separator]
             replacer = args[separator + 1:]
             add_alias(alias, replacer)
-            await send_message(f'Alias "{alias} -> {replacer}" has been successfully added')
+            await send_message(f'Alias "{alias}" has been successfully added')
     except Exception as e:
         logging.exception(e)
         

@@ -47,17 +47,23 @@ class YoutubeService:
 
         # only video id was found
         if (playlist == None):
-            self.enqueue(video_id[0], None, channel, msg_callback, time_code)
-            if (self._player.is_playing()):
-                await msg_callback(f'Your video was added to queue')
-            return
+            await self._enqueue(video_id[0], None, channel, msg_callback, time_code)
+        else:
+            index = int(index[0]) if index != None else 0
+            await self.enqueue_playlist(playlist[0], channel, msg_callback, index)
 
-        index = int(index[0]) - 2 if index != None else 0
-        items = playlist_items(playlist[0])[index:]
+    async def enqueue_video(self, video_id, title, channel, msg_callback, time_code=None):
+        self._enqueue(video_id, title, channel, msg_callback, time_code)
+        if (self._player.is_playing()):
+            await msg_callback(f'Your video was added to queue')
+
+    async def enqueue_playlist(self, playlistId, channel, msg_callback, index = None):
+        index = index - 2 if index != None else 0
+        items = playlist_items(playlistId)[index:]
 
         for i in range(len(items)):
             item = items[i]
-            self.enqueue(
+            self._enqueue(
                 item['videoId'],
                 f'{item["title"]} (#{index + i + 1} in playlist)',
                 channel,
@@ -65,7 +71,7 @@ class YoutubeService:
             )
         await msg_callback(f'Enqueued {len(items)} playlist items :>')
 
-    def enqueue(self, video_id, title, channel, msg_callback, time_code=None):
+    def _enqueue(self, video_id, title, channel, msg_callback, time_code=None):
         if (title == None):
             title = f'#{video_id}'
             
@@ -144,10 +150,13 @@ def search(query: str):
     json = requests.get(req.url).json()
 
     for item in json['items']:
-        if (not item['id'].get('videoId')): continue
+        videoId = item['id'].get('videoId')
+        playlistId = item['id'].get('playlistId')
+        if (not videoId and not playlistId): continue
         results.append({
-            'videoId': item['id']['videoId'],
-            'title': html.unescape(item['snippet']['title'])
+            'id': videoId if videoId != None else playlistId,
+            'title': html.unescape(item['snippet']['title']),
+            'isPlaylist': playlistId != None
         })
 
     return results

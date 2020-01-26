@@ -172,12 +172,19 @@ async def on_message(message):
             if (len(search_results) == 0):
                 await send_message('Nothing was found :c')
                 return
-            selected_index = await choice(list(map(lambda v: v['title'], search_results)), author.id, send_message)
+            selected_index = await choice(list(map(
+                lambda item:
+                    item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
+                search_results
+            )), author.id, send_message)
             if (selected_index == None):
                 return
-            video = search_results[selected_index]
-            video_id = video['videoId']
-            youtube.enqueue(video_id, video['title'], author_vc, send_message)
+            selected = search_results[selected_index]
+            result_id = selected['id']
+            if (selected['isPlaylist']):
+                await youtube.enqueue_playlist(result_id, author_vc, send_message)
+            else:
+                await youtube.enqueue_video(result_id, selected['title'], author_vc, send_message)
 
         elif (msg == 'skip'):
             if (gachi.is_radio):

@@ -17,11 +17,33 @@ class YoutubeService:
     def __init__(self, player: Player):
         self._player = player
 
-    async def parse_cmd(self, ctx):
-        if (ctx.args == None):
+    async def search(self, query, ctx):
+        search_results = _search(query)
+        if (len(search_results) == 0):
+            await ctx.msg_callback('Nothing was found :c')
             return
 
-        parts = list(filter(None, ctx.args.split(' ')))
+        selected_index = await ctx.choice(list(map(
+            lambda item:
+                item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
+            search_results
+        )))
+        if (selected_index == None):
+            return
+
+        selected = search_results[selected_index]
+        result_id = selected['id']
+
+        if (selected['isPlaylist']):
+            await self.enqueue_playlist(result_id, ctx)
+        else:
+            await self.enqueue_video(result_id, selected['title'], ctx)
+
+    async def play(self, args, ctx):
+        if (args == None or ctx.author_vc == None):
+            return
+
+        parts = list(filter(None, args.split(' ')))
         video_url = None
         time_code = None
 
@@ -133,7 +155,7 @@ def playlist_items(listId: str) -> []:
 
     return videos
 
-def search(query: str):
+def _search(query: str):
     url = "https://www.googleapis.com/youtube/v3/search"
     results = []
 

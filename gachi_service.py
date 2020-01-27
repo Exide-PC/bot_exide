@@ -16,15 +16,6 @@ class GachiService:
     _queue = []
     message_callback = None
 
-    def search(self, keyword: str) -> []:
-        if (keyword == None):
-            return []
-
-        return list(filter(
-            lambda g: keyword.lower() in g['title'].lower(), 
-            self._gachi_list
-        ))
-
     async def enqueue(self, gachi, ctx):
         self.message_callback = ctx.msg_callback
         
@@ -58,6 +49,9 @@ class GachiService:
         self._player.is_queue_mode = True
 
     async def radio(self, ctx):
+        if (ctx.author_vc == None):
+            return
+
         is_radio = not self.is_radio
         await ctx.msg_callback(f'Gachi radio is {"On" if is_radio else "Off"}')
 
@@ -68,6 +62,32 @@ class GachiService:
         else:
             self.stop()
         self.is_radio = is_radio
+
+    async def search(self, query, ctx):
+        if (ctx.author_vc == None):
+            return
+
+        search_results = self._search(query)
+        if (len(search_results) == 0):
+            await ctx.msg_callback('Nothing was found :c')
+            return
+
+        options = list(map(lambda g: g['title'], search_results))
+        selected_index = await ctx.choice(options)
+        if (selected_index == None):
+            return
+        selected_gachi = search_results[selected_index]
+        
+        await self.enqueue(selected_gachi, ctx)
+
+    def _search(self, keyword: str) -> []:
+        if (keyword == None):
+            return []
+
+        return list(filter(
+            lambda g: keyword.lower() in g['title'].lower(), 
+            self._gachi_list
+        ))
 
     def skip(self):
         self._player.skip()

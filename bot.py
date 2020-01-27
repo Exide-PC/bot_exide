@@ -33,13 +33,15 @@ class ExecutionContext:
     author = None
     author_vc = None
     msg_callback = None
-    def __init__(self, cmd, args, msg, author, author_vc, msg_callback):
+    choice_callback = None
+    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback):
         self.cmd = cmd
         self.args = args
         self.msg = msg
         self.author = author
         self.author_vc = author_vc
         self.msg_callback = msg_callback
+        self.choice_callback = choice_callback
 
 def update_cfg(new_cfg: dict):
     global config
@@ -53,17 +55,17 @@ def add_alias(cmd: str, replacer: str):
     ])
     update_cfg(config)
 
-async def choice(options: [], ctx: ExecutionContext):
+async def choice(options: [], user_id, msg_callback):
     choice_hint = ""
     for i in range(len(options)):
         choice_hint += f'{i + 1}. {options[i]}'
         choice_hint += '\n' if i != len(options) - 1 else ''
 
-    await ctx.msg_callback(choice_hint)
+    await msg_callback(choice_hint)
     result = None
 
     def check(m):
-        if (m.author.id != ctx.author.id): return False
+        if (m.author.id != user_id): return False
         try:
             i = int(m.content) - 1
             if (i < 0 or i >= len(options)): return False
@@ -106,10 +108,6 @@ async def on_message(message):
             message.channel.name != 'bot-exide' or
             message.author == bot.user): return
 
-        async def send_message(msg: str):
-            logging.info(f'Sending message "{msg}"')
-            await message.channel.send(msg)
-
         for alias in config['aliases']:
             if (alias[0].lower() == message.content.lower()):
                 message.content = alias[1]
@@ -138,7 +136,14 @@ async def on_message(message):
         logging.info(f'{author.display_name} is executing command "{msg}"')
 
         cmd = message.content.split(' ')[0].lower()
-        args = message.content[len(cmd) + 1:]
+        args = message.content[len(cmd) + 1:].strip()
+
+        async def send_message(msg: str):
+            logging.info(f'Sending message "{msg}"')
+            await message.channel.send(msg)
+
+        async def choice_callback(options: []):
+            return await choice(options, author.id, send_message)    
 
         context = ExecutionContext(
             cmd,
@@ -146,75 +151,35 @@ async def on_message(message):
             message.content,
             author,
             author_vc,
-            send_message
+            send_message,
+            choice_callback
         )
 
         global player
 
-        if (msg.lower() == 'gachi radio'):
-            if (author_vc == None):
-                return
-            await gachi.radio(context)
-        
-        elif (msg == 'gachi skip'):
-            gachi.skip()
-        
-        elif (msg == 'gachi stop'):
-            gachi.stop()
-        
-        elif (msg.startswith('gachi')):
-            if (author_vc == None):
-                return
-
-            search_value = msg[len('gachi'):].strip()
-            selected_gachi = None
-
-            if (len(search_value) > 0):
-                search_results = gachi.search(search_value)
-                if (len(search_results) == 0):
-                    await send_message('Nothing was found :c')
-                    return
-
-                options = list(map(lambda g: g['title'], search_results))
-                selected_index = await choice(options, context)
-                if (selected_index == None):
-                    return
-                selected_gachi = search_results[selected_index]
-            
-            await gachi.enqueue(selected_gachi, context)
+        if (cmd == 'gachi'):
+            if (args == 'radio'):
+                await gachi.radio(context)
+            elif (args == 'skip'):
+                gachi.skip()
+            elif (args == 'stop'):
+                gachi.stop()
+            elif (args != None):
+                await gachi.search(context.args, context)
+            elif (args == None):
+                await gachi.enqueue(None, context)
 
         elif (msg == 'join'):
-            if (author_vc == None): return
             await player.join_channel(author_vc)
 
         elif (msg == 'disc'):
             await player.disconnect()
 
         elif (msg.startswith('play')):
-            if (author_vc == None):
-                return
-            cmd = message.content[len('play') + 1:]
-            await youtube.parse_cmd(context)
+            await youtube.play(context.args, context)
 
         elif (msg.startswith('search')):
-            query = msg[len('search'):].strip()
-            search_results = search(query)
-            if (len(search_results) == 0):
-                await send_message('Nothing was found :c')
-                return
-            selected_index = await choice(list(map(
-                lambda item:
-                    item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
-                search_results
-            )), context)
-            if (selected_index == None):
-                return
-            selected = search_results[selected_index]
-            result_id = selected['id']
-            if (selected['isPlaylist']):
-                await youtube.enqueue_playlist(result_id, context)
-            else:
-                await youtube.enqueue_video(result_id, selected['title'], context)
+            youtube.search(context.args, context)
 
         elif (msg == 'skip'):
             if (gachi.is_radio):

@@ -212,9 +212,9 @@ async def on_message(message):
             selected = search_results[selected_index]
             result_id = selected['id']
             if (selected['isPlaylist']):
-                await youtube.enqueue_playlist(result_id, author_vc, send_message)
+                await youtube.enqueue_playlist(result_id, context)
             else:
-                await youtube.enqueue_video(result_id, selected['title'], author_vc, send_message)
+                await youtube.enqueue_video(result_id, selected['title'], context)
 
         elif (msg == 'skip'):
             if (gachi.is_radio):

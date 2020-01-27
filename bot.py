@@ -26,6 +26,21 @@ player = None
 gachi = None
 youtube = None
 
+class ExecutionContext:
+    cmd = None
+    args = None
+    msg = None    
+    author = None
+    author_vc = None
+    msg_callback = None
+    def __init__(self, cmd, args, msg, author, author_vc, msg_callback):
+        self.cmd = cmd
+        self.args = args
+        self.msg = msg
+        self.author = author
+        self.author_vc = author_vc
+        self.msg_callback = msg_callback
+
 def update_cfg(new_cfg: dict):
     global config
     config_update_callback(new_cfg)
@@ -38,17 +53,17 @@ def add_alias(cmd: str, replacer: str):
     ])
     update_cfg(config)
 
-async def choice(options: [], user_id, message_callback):
+async def choice(options: [], ctx: ExecutionContext):
     choice_hint = ""
     for i in range(len(options)):
         choice_hint += f'{i + 1}. {options[i]}'
         choice_hint += '\n' if i != len(options) - 1 else ''
 
-    await message_callback(choice_hint)
+    await ctx.msg_callback(choice_hint)
     result = None
 
     def check(m):
-        if (m.author.id != user_id): return False
+        if (m.author.id != ctx.author.id): return False
         try:
             i = int(m.content) - 1
             if (i < 0 or i >= len(options)): return False
@@ -112,6 +127,8 @@ async def on_message(message):
         if (message.content.lower() == 'sax'):
             message.content = 'play https://www.youtube.com/watch?v=uiDVSYa8IPw'
 
+        message.content = message.content.strip()
+
         # we also need the 'voice' property which is not being
         # passed in case the message was received via PM
         author = bot.guilds[0].get_member(message.author.id)
@@ -119,12 +136,25 @@ async def on_message(message):
         
         msg = message.content.lower()
         logging.info(f'{author.display_name} is executing command "{msg}"')
+
+        cmd = message.content.split(' ')[0].lower()
+        args = message.content[len(cmd) + 1:]
+
+        context = ExecutionContext(
+            cmd,
+            args if len(args) > 0 else None,
+            message.content,
+            author,
+            author_vc,
+            send_message
+        )
+
         global player
 
         if (msg.lower() == 'gachi radio'):
             if (author_vc == None):
                 return
-            await gachi.radio(author_vc, send_message)
+            await gachi.radio(context)
         
         elif (msg == 'gachi skip'):
             gachi.skip()
@@ -146,12 +176,12 @@ async def on_message(message):
                     return
 
                 options = list(map(lambda g: g['title'], search_results))
-                selected_index = await choice(options, author.id, send_message)
+                selected_index = await choice(options, context)
                 if (selected_index == None):
                     return
                 selected_gachi = search_results[selected_index]
             
-            await gachi.enqueue(selected_gachi, author_vc, send_message)
+            await gachi.enqueue(selected_gachi, context)
 
         elif (msg == 'join'):
             if (author_vc == None): return
@@ -164,7 +194,7 @@ async def on_message(message):
             if (author_vc == None):
                 return
             cmd = message.content[len('play') + 1:]
-            await youtube.parse_cmd(cmd, author_vc, send_message)
+            await youtube.parse_cmd(context)
 
         elif (msg.startswith('search')):
             query = msg[len('search'):].strip()
@@ -176,7 +206,7 @@ async def on_message(message):
                 lambda item:
                     item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
                 search_results
-            )), author.id, send_message)
+            )), context)
             if (selected_index == None):
                 return
             selected = search_results[selected_index]

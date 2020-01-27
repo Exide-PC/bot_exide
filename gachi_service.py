@@ -25,8 +25,8 @@ class GachiService:
             self._gachi_list
         ))
 
-    async def enqueue(self, gachi, channel, msg_callback):
-        self.message_callback = msg_callback
+    async def enqueue(self, gachi, ctx):
+        self.message_callback = ctx.msg_callback
         
         if (gachi == None):
             gachi = random.choice(self._gachi_list)
@@ -35,13 +35,13 @@ class GachiService:
         title = gachi["title"]
 
         async def item_callback():
-            await self._player.join_channel(channel)
-            await msg_callback(f'Now playing: {title}')
+            await self._player.join_channel(ctx.author_vc)
+            await ctx.msg_callback(f'Now playing: {title}')
             return youtube.download_sound(video_id)
         self._player.enqueue(item_callback, title)
 
         if (self._player.is_playing()):
-            await msg_callback(f'{title} was added to queue')
+            await ctx.msg_callback(f'{title} was added to queue')
 
     async def _radio_loop(self):
         # deactivate queue mode while radio is active
@@ -57,13 +57,13 @@ class GachiService:
             await asyncio.sleep(1)
         self._player.is_queue_mode = True
 
-    async def radio(self, channel, message_callback=None):
+    async def radio(self, ctx):
         is_radio = not self.is_radio
-        await message_callback(f'Gachi radio is {"On" if is_radio else "Off"}')
+        await ctx.msg_callback(f'Gachi radio is {"On" if is_radio else "Off"}')
 
         if (is_radio):
-            await self._player.join_channel(channel)
-            self.message_callback = message_callback
+            await self._player.join_channel(ctx.author_vc)
+            self.message_callback = ctx.msg_callback
             asyncio.create_task(self._radio_loop())
         else:
             self.stop()

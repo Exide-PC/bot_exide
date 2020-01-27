@@ -17,11 +17,11 @@ class YoutubeService:
     def __init__(self, player: Player):
         self._player = player
 
-    async def parse_cmd(self, cmd, channel, msg_callback):
-        parts = list(filter(None, cmd.split(' ')))
-        if (len(parts) == 0):
+    async def parse_cmd(self, ctx):
+        if (ctx.args == None):
             return
 
+        parts = list(filter(None, ctx.args.split(' ')))
         video_url = None
         time_code = None
 
@@ -43,21 +43,21 @@ class YoutubeService:
         index = query.get('index')
 
         if (playlist == None and video_id == None):
-            await msg_callback('Wrong url')
+            await ctx.msg_callback('Wrong url')
 
         # only video id was found
         if (playlist == None):
-            await self._enqueue(video_id[0], None, channel, msg_callback, time_code)
+            await self.enqueue_video(video_id[0], None, ctx, time_code)
         else:
             index = int(index[0]) if index != None else 0
-            await self.enqueue_playlist(playlist[0], channel, msg_callback, index)
+            await self.enqueue_playlist(playlist[0], ctx, index)
 
-    async def enqueue_video(self, video_id, title, channel, msg_callback, time_code=None):
-        self._enqueue(video_id, title, channel, msg_callback, time_code)
+    async def enqueue_video(self, video_id, title, ctx, time_code=None):
+        self._enqueue(video_id, title, ctx, time_code)
         if (self._player.is_playing()):
-            await msg_callback(f'Your video was added to queue')
+            await ctx.msg_callback(f'Your video was added to queue')
 
-    async def enqueue_playlist(self, playlistId, channel, msg_callback, index = None):
+    async def enqueue_playlist(self, playlistId, ctx, index = None):
         index = index - 2 if index != None else 0
         items = playlist_items(playlistId)[index:]
 
@@ -66,12 +66,11 @@ class YoutubeService:
             self._enqueue(
                 item['videoId'],
                 f'{item["title"]} (#{index + i + 1} in playlist)',
-                channel,
-                msg_callback
+                ctx
             )
-        await msg_callback(f'Enqueued {len(items)} playlist items :>')
+        await ctx.msg_callback(f'Enqueued {len(items)} playlist items :>')
 
-    def _enqueue(self, video_id, title, channel, msg_callback, time_code=None):
+    def _enqueue(self, video_id, title, ctx, time_code=None):
         if (title == None):
             title = f'#{video_id}'
             
@@ -87,18 +86,18 @@ class YoutubeService:
                         try:
                             file_path = downlad_and_trunc_sound(video_id, time_code)
                         except ValueError:
-                            await msg_callback('Incorrent timecode input')
+                            await ctx.msg_callback('Incorrent timecode input')
                             return
                     break
                 except Exception:
                     attempt_counter += 1
 
             if (file_path == None):
-                await msg_callback(f'Download failed after {attempt_counter} retries :c')
+                await ctx.msg_callback(f'Download failed after {attempt_counter} retries :c')
                 return
             
-            await msg_callback(f'Now playing: {title}')
-            await self._player.join_channel(channel)
+            await ctx.msg_callback(f'Now playing: {title}')
+            await self._player.join_channel(ctx.author_vc)
             return file_path
 
         self._player.enqueue(item_callback, title)

@@ -7,8 +7,7 @@ from discord.opus import load_opus
 from dotenv import load_dotenv
 import random
 import asyncio
-from youtube import YoutubeService, search
-import youtube
+from youtube import YoutubeService
 from player import Player
 from gachi_service import GachiService
 import re
@@ -179,7 +178,7 @@ async def on_message(message):
             await youtube.play(context.args, context)
 
         elif (msg.startswith('search')):
-            youtube.search(context.args, context)
+            await youtube.search(context.args, context)
 
         elif (msg == 'skip'):
             if (gachi.is_radio):

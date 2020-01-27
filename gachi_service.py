@@ -73,7 +73,7 @@ class GachiService:
             return
 
         options = list(map(lambda g: g['title'], search_results))
-        selected_index = await ctx.choice(options)
+        selected_index = await ctx.choice_callback(options)
         if (selected_index == None):
             return
         selected_gachi = search_results[selected_index]

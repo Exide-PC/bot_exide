@@ -23,7 +23,7 @@ class YoutubeService:
             await ctx.msg_callback('Nothing was found :c')
             return
 
-        selected_index = await ctx.choice(list(map(
+        selected_index = await ctx.choice_callback(list(map(
             lambda item:
                 item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
             search_results

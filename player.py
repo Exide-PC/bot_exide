@@ -94,7 +94,7 @@ class Player(Voice):
                 self.current_item = self.queue.pop(0)
                 logging.info(f'Dequeued item {self.current_item.title}')
 
-                file_path = await self.current_item.path_callback()
+                file_path = await self.get_path(self.current_item)
                 logging.info(f'Received file path: {file_path if file_path != None else "None"}')
                 if (file_path == None):
                     continue
@@ -106,6 +106,20 @@ class Player(Voice):
                     
             self.current_item = None
             await asyncio.sleep(1)
+
+    async def get_path(self, item: Item):
+        attempt_limit = 3
+
+        for i in range(attempt_limit):
+            try:
+                return await item.path_callback()
+            except Exception as e:
+                if (i != attempt_limit - 1):
+                    logging.error(f'Retrying to load item {item.title}...')
+                else:
+                    logging.error(e)
+                    logging.error(f'Could not load item {item.title} after {i + 1} retries')
+                    return None
 
     def enqueue(self, path_callback, title):
         item = Item(path_callback, title)

@@ -12,7 +12,6 @@ class Item:
 
 class Voice:
     bot = None
-    current_file = None
 
     def __init__(self, bot):
         self.bot = bot
@@ -25,7 +24,8 @@ class Voice:
             return None
         return self.bot.voice_clients[0]
 
-    async def _play(self, file_path: str, is_max_volume=False):
+    async def play_async(self, file_path: str):
+        logging.debug(f'Starting playing {file_path}')
         if (not self.is_connected()):
             raise Exception('Voice client is not connected')
 
@@ -33,25 +33,19 @@ class Voice:
         if (client.is_playing()):
             client.stop()
 
-        audio = PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(file_path), 
-            2 if is_max_volume else 1
-        )
-        self.current_file = file_path
+        audio = PCMVolumeTransformer(discord.FFmpegPCMAudio(file_path), 1)
         client.play(audio)
 
+        # waiting for audio to start playing
         while (not client.is_playing()):
             await asyncio.sleep(100)
+        # waiting for audio to end
 
-    async def play_async(self, file_path: str, is_max_volume=False):
-        await self._play(file_path, is_max_volume)
+        logging.debug(f'Waiting for {file_path} to end')
 
-        while (True): # post-condition async loop
+        while (client.is_playing()): # post-condition async loop
             await asyncio.sleep(1)
-            if (not self.is_playing() or file_path != self.current_file):
-                break
-        if (self.current_file == file_path):
-            self.current_file = None
+        logging.debug(f'Finished playing {file_path}')
 
     async def join_channel(self, voice_channel, reconnect: bool = False):
         if (voice_channel == None): return
@@ -65,7 +59,6 @@ class Voice:
             await self._get_client().move_to(voice_channel)
 
     def stop(self):
-        self.current_file = None
         client = self._get_client()
         if (client == None): return
         client.stop()
@@ -76,7 +69,6 @@ class Voice:
             return
 
         await client.disconnect()
-        self.current_file = None
 
 class Player(Voice):
     is_queue_mode = True

@@ -30,8 +30,10 @@ class Voice:
             raise Exception('Voice client is not connected')
 
         client = self._get_client()
-        if (client.is_playing()):
-            client.stop()
+        client.stop()
+        
+        while (client.is_playing()):
+            await asyncio.sleep(100)
 
         audio = PCMVolumeTransformer(discord.FFmpegPCMAudio(file_path), 1)
         client.play(audio)
@@ -39,11 +41,10 @@ class Voice:
         # waiting for audio to start playing
         while (not client.is_playing()):
             await asyncio.sleep(100)
-        # waiting for audio to end
 
         logging.debug(f'Waiting for {file_path} to end')
 
-        while (client.is_playing()): # post-condition async loop
+        while (client.is_playing()):
             await asyncio.sleep(1)
         logging.debug(f'Finished playing {file_path}')
 

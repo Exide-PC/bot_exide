@@ -18,18 +18,25 @@ class YoutubeService:
         self._player = player
 
     async def search(self, query, ctx):
+        selected_index = None
+        if (' & ' in query):
+            offset = query.find(' & ')
+            selected_index = int(query[offset + len(' & '):]) - 1
+            query = query[:offset]
+            
         search_results = _search(query)
         if (len(search_results) == 0):
             await ctx.msg_callback('Nothing was found :c')
             return
 
-        selected_index = await ctx.choice_callback(list(map(
-            lambda item:
-                item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
-            search_results
-        )))
-        if (selected_index == None):
-            return
+        if (selected_index == None): # not specified explicitly
+            selected_index = await ctx.choice_callback(list(map(
+                lambda item:
+                    item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
+                search_results
+            )))
+            if (selected_index == None):
+                return
 
         selected = search_results[selected_index]
         result_id = selected['id']

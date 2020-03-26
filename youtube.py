@@ -221,14 +221,14 @@ def _trunc(file_path: str, time_code: str) -> str:
     file_suffix = ''
     args = ''
     
-    minute, second = _extract(left)
-    file_suffix += f'{minute}-{second}'
-    args += f'-ss 00:{minute}:{second}'
+    minute, second, millis = _extract(left)
+    file_suffix += f'{minute}-{second}-{millis}'
+    args += f'-ss 00:{minute}:{second}.{millis}'
 
     if (to_specified):
-        minute, second = _extract(right)
-        file_suffix += f'_{minute}-{second}'
-        args += f' -to 00:{minute}:{second}'
+        minute, second, millis = _extract(right)
+        file_suffix += f'_{minute}-{second}-{millis}'
+        args += f' -to 00:{minute}:{second}.{millis}'
 
     cut_file = "{0}_{2}.{1}".format(*file_path.rsplit('.', 1) + [file_suffix])
 
@@ -238,9 +238,16 @@ def _trunc(file_path: str, time_code: str) -> str:
     return cut_file
 
 def _extract(string: str):
+    milliseconds = '0'
+    if ('.' in string):
+        parts = string.split('.')
+        string = parts[0]
+        milliseconds = parts[1]
+
     parts = string.split(':')
     minute, second = f'{int(parts[0]):02}', f'{int(parts[1]):02}'
-    return minute, second
+    
+    return minute, second, milliseconds
 
 if (__name__ == '__main__'):
     _trunc('music/7wtfhZwyrcc.webm', '1:01')

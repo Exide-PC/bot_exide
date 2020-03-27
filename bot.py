@@ -89,6 +89,21 @@ async def choice(options: [], user_id, msg_callback):
     except asyncio.TimeoutError:
         pass
 
+def find_replacer(msg):
+    while(True):
+        replacer = None
+        for alias in config['aliases']:
+            if (alias[0].lower() == msg.lower()):
+                replacer = alias[1]
+                logging.info(f'Found suitable alias. Replacing "{alias[0]}" with "{alias[1]}"')
+        
+        if (replacer == None):
+            break
+        else:
+            msg = replacer
+
+    return msg
+
 @bot.event
 async def on_voice_state_update(member, before, after):
     protected_members = [
@@ -116,10 +131,7 @@ async def on_message(message):
             message.channel.name != 'bot-exide' or
             message.author == bot.user): return
 
-        for alias in config['aliases']:
-            if (alias[0].lower() == message.content.lower()):
-                message.content = alias[1]
-                logging.info(f'Found suitable alias. Replacing "{alias[0]}" with "{alias[1]}"')
+        message.content = find_replacer(message.content)
 
         # message preprocessing to handle shortcuts
         if (message.content.lower() == 'gachi depression'):

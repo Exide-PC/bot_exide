@@ -49,9 +49,18 @@ def update_cfg(new_cfg: dict):
 
 def add_alias(cmd: str, replacer: str):
     global config
-    config['aliases'].append([
-        cmd, replacer
-    ])
+    current_aliases = list(map(lambda a: a[0], config['aliases']))
+
+    index = -1
+    if (cmd in current_aliases):
+        index = current_aliases.index(cmd)
+
+    alias = [cmd, replacer]
+    if (index == -1):
+        config['aliases'].append(alias)
+    else:
+        config['aliases'][index] = alias
+        
     update_cfg(config)
 
 async def choice(options: [], user_id, msg_callback):

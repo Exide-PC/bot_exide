@@ -261,11 +261,11 @@ async def on_ready():
     gachi = gachi or GachiService(player, config['gachi'])
     youtube = youtube or YoutubeService(player)
 
-    asyncio.create_task(player.loop())
-
     prev_voice = bot.guilds[0].get_member(bot.user.id).voice
     if (prev_voice != None):
-        await player.join_channel(prev_voice.channel, True)
+        await player.join_channel(prev_voice.channel)
+
+    asyncio.create_task(player.loop())
 
     logging.info(f'{bot.user} has connected')
 

@@ -14,8 +14,8 @@ def set_logger():
                 record.name.startswith('discord.') or 
                 record.name.startswith('websockets.') or 
                 record.name.startswith('urllib3.')
-            ) or (
-                record.levelno >= 30 # Warning
+            # ) or (
+            #     record.levelno >= 30 # Warning
             )
 
     logFormatter = logging.Formatter('[%(asctime)s %(levelname)s] %(message)s') # %(pathname)s

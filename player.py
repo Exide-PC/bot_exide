@@ -35,17 +35,19 @@ class Voice:
         while (client.is_playing()):
             await asyncio.sleep(1)
 
+        stop_event = asyncio.Event()
+        loop = asyncio.get_event_loop()
+        def after(error):
+            if error:
+                logging.error(error)
+            def clear():
+                stop_event.set()
+            loop.call_soon_threadsafe(clear)
+
         audio = PCMVolumeTransformer(discord.FFmpegPCMAudio(file_path), 1)
-        client.play(audio)
+        client.play(audio, after=after)
 
-        # waiting for audio to start playing
-        while (not client.is_playing()):
-            await asyncio.sleep(1)
-
-        logging.debug(f'Waiting for {file_path} to end')
-
-        while (client.is_playing()):
-            await asyncio.sleep(1)
+        await stop_event.wait()
         logging.debug(f'Finished playing {file_path}')
 
     async def join_channel(self, voice_channel):

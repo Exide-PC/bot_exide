@@ -51,11 +51,15 @@ class Voice:
     async def join_channel(self, voice_channel, reconnect: bool = False):
         if (voice_channel == None): return
 
+        if (self.bot.ws.closed):
+            logging.warning('Socket was closed on attempt to join channel, reconnecting the bot')
+            await self.bot.connect()
+            logging.warning('============================ WTF ============================')
+            logging.warning('======================== RECONNECTED ========================')
+            logging.warning('============================ ??? ============================')
+
         if (not self.is_connected()):
-            if (reconnect):
-                prev_client = await voice_channel.connect()
-                await prev_client.disconnect()
-            await voice_channel.connect(reconnect=True)
+            await voice_channel.connect()
         else:
             await self._get_client().move_to(voice_channel)
 
@@ -79,9 +83,8 @@ class Player(Voice):
 
     def __init__(self, bot):
         super().__init__(bot)
-        asyncio.create_task(self._loop())
         
-    async def _loop(self):
+    async def loop(self):
         while (True):
             while (self.is_queue_mode and (len(self.queue) > 0)):
                 self.current_item = self.queue.pop(0)

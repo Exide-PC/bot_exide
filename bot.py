@@ -131,7 +131,7 @@ async def on_message(message):
             message.channel.name != 'bot-exide' or
             message.author == bot.user): return
 
-        message.content = find_replacer(message.content)
+        message.content = find_replacer(message.content).strip()
 
         # message preprocessing to handle shortcuts
         if (message.content.lower() == 'gachi depression'):
@@ -144,8 +144,6 @@ async def on_message(message):
             message.content = 'play https://www.youtube.com/watch?v=ir-pKzGsKPQ'
         if (message.content.lower() == 'sax'):
             message.content = 'play https://www.youtube.com/watch?v=uiDVSYa8IPw'
-
-        message.content = message.content.strip()
 
         # we also need the 'voice' property which is not being
         # passed in case the message was received via PM
@@ -259,9 +257,11 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     global player, gachi, youtube
-    player = Player(bot)
-    gachi = GachiService(player, config['gachi'])
-    youtube = YoutubeService(player)
+    player = player or Player(bot)
+    gachi = gachi or GachiService(player, config['gachi'])
+    youtube = youtube or YoutubeService(player)
+
+    asyncio.create_task(player.loop())
 
     prev_voice = bot.guilds[0].get_member(bot.user.id).voice
     if (prev_voice != None):

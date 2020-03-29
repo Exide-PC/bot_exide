@@ -12,6 +12,7 @@ from player import Player
 from gachi_service import GachiService
 import re
 import logging
+import abc
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -20,20 +21,14 @@ bot = commands.Bot(command_prefix = 'cb!')
 # voice_client = None
 config = None
 config_update_callback = None
+executors = None
 
 player = None
 gachi = None
 youtube = None
 
 class ExecutionContext:
-    cmd = None
-    args = None
-    msg = None    
-    author = None
-    author_vc = None
-    msg_callback = None
-    choice_callback = None
-    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback):
+    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback, player):
         self.cmd = cmd
         self.args = args
         self.msg = msg
@@ -41,6 +36,25 @@ class ExecutionContext:
         self.author_vc = author_vc
         self.msg_callback = msg_callback
         self.choice_callback = choice_callback
+        self.player = player
+
+class CommandExecutor(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def name(self):
+        pass
+
+    @abc.abstractmethod
+    def isserving(self, ctx: ExecutionContext):
+        pass
+
+    @abc.abstractmethod
+    async def execute(self, ctx: ExecutionContext):
+        pass
+
+    @abc.abstractmethod
+    def list_commands(self):
+        pass
 
 def update_cfg(new_cfg: dict):
     global config
@@ -163,6 +177,8 @@ async def on_message(message):
         async def choice_callback(options: []):
             return await choice(options, author.id, send_message)    
 
+        global player
+
         context = ExecutionContext(
             cmd,
             args if len(args) > 0 else None,
@@ -170,10 +186,18 @@ async def on_message(message):
             author,
             author_vc,
             send_message,
-            choice_callback
+            choice_callback,
+            player
         )
 
-        global player
+        for executor in executors:
+            if (executor.isserving(context)):
+                try:
+                    await executor.execute(context)
+                except Exception as e:
+                    logging.error(f'Error occured during command execution. {e}')
+                finally:
+                    return
 
         if (cmd == 'gachi'):
             if (args == 'radio'):
@@ -186,12 +210,6 @@ async def on_message(message):
                 await gachi.search(context.args, context)
             elif (args == None):
                 await gachi.enqueue(None, context)
-
-        elif (msg == 'join'):
-            await player.join_channel(author_vc)
-
-        elif (msg == 'disc'):
-            await player.disconnect()
 
         elif (msg.startswith('play')):
             await youtube.play(context.args, context)
@@ -272,7 +290,7 @@ async def on_ready():
 
     logging.info(f'{bot.user} has connected')
 
-def start(token: str, cfg: dict, cfg_update_callback):
-    global config, config_update_callback
-    config, config_update_callback = cfg, cfg_update_callback
+def start(token: str, cfg: dict, cfg_update_callback, command_executors):
+    global config, config_update_callback, executors
+    config, config_update_callback, executors = cfg, cfg_update_callback, command_executors
     bot.run(token)

@@ -6,6 +6,7 @@ import youtube
 import json
 import logging
 from dotenv import load_dotenv
+from executors.Joiner import Joiner
 
 def set_logger():
     class LogFilter(logging.Filter):
@@ -65,6 +66,10 @@ else:
     with open(cfg_path, 'r') as f:
         cfg = json.load(f)
 
-bot.start(discord_token, cfg, update_cfg)
+executors = [
+    Joiner()
+]
+
+bot.start(discord_token, cfg, update_cfg, executors)
 
 

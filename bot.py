@@ -156,9 +156,9 @@ async def on_message(message):
         cmd = message.content.split(' ')[0].lower()
         args = message.content[len(cmd) + 1:].strip()
 
-        async def send_message(msg: str):
-            logging.info(f'Sending message "{msg}"')
-            await message.channel.send(msg)
+        async def send_message(msg: str = None, embed: discord.Embed = None):
+            logging.info(f'Sending message "{msg}" {"(with embed)" if embed else ""}')
+            await message.channel.send(content=msg, embed=embed)
 
         async def choice_callback(options: []):
             return await choice(options, author.id, send_message)    
@@ -238,7 +238,10 @@ async def on_message(message):
                     queue += f'\n... {len(items) - i + 1} more'
                     break
                 queue += f'\n{i + 1}. {items[i].title}'
-            await send_message(queue)
+
+            embed = discord.Embed()
+            embed.description = queue
+            await send_message(queue, embed=embed)
         
         elif (msg.startswith('alias')):
             args = message.content[len('alias'):].strip()

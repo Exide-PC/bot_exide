@@ -55,6 +55,7 @@ class Voice:
                 await self._get_client().move_to(voice_channel)
             else:
                 logging.warning('Not connected voice client encountered, something bad is going to happen...')
+                await self._get_client().move_to(voice_channel)
                 await self.disconnect()
                 await voice_channel.connect()
                 pass # TODO do something here probably on server switch

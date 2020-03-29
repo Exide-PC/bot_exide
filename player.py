@@ -14,10 +14,10 @@ class Item:
         self.title = title
 
 class Voice:
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self):
         self.stop_event = asyncio.Event()
         self.stop_event.set()
+        self.bot = None
 
     def is_connected(self): return self._get_client() != None
     def is_playing(self): return self.is_connected() and self._get_client().is_playing()
@@ -77,14 +77,17 @@ class Voice:
 
         await client.disconnect(force=True)
 
+    def initialize(self, bot):
+        self.bot = bot
+
 class Player(Voice):
     is_queue_mode = True
     is_repeat_mode = False
     queue = []
     current_item = None
 
-    def __init__(self, bot):
-        super().__init__(bot)
+    def __init__(self):
+        super().__init__()
         # asyncio.create_task(self.loop())
         
     async def loop(self):

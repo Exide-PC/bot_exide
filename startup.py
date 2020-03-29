@@ -6,7 +6,13 @@ import youtube
 import json
 import logging
 from dotenv import load_dotenv
-from executors.Joiner import Joiner
+from player import Player
+from gachi_service import GachiService
+from youtube import YoutubeService
+from executors.PlayerExtension import PlayerExtension
+from executors.GachiExtension import GachiExtension
+from executors.YoutubeExtension import YoutubeExtension
+from executors.AliasExtension import AliasExtension
 
 def set_logger():
     class LogFilter(logging.Filter):
@@ -66,10 +72,17 @@ else:
     with open(cfg_path, 'r') as f:
         cfg = json.load(f)
 
+player = Player()
+gachi = GachiService(player, cfg['gachi'])
+youtube = YoutubeService(player)
+
 executors = [
-    Joiner()
+    PlayerExtension(player),
+    YoutubeExtension(youtube),
+    GachiExtension(gachi),
+    AliasExtension(cfg, update_cfg)
 ]
 
-bot.start(discord_token, cfg, update_cfg, executors)
+bot.start(discord_token, cfg, executors)
 
 

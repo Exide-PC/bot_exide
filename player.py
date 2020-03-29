@@ -11,10 +11,10 @@ class Item:
         self.title = title
 
 class Voice:
-    bot = None
-
     def __init__(self, bot):
         self.bot = bot
+        self.stop_event = asyncio.Event()
+        self.stop_event.set()
 
     def is_connected(self): return self._get_client() != None
     def is_playing(self): return self.is_connected() and self._get_client().is_playing()
@@ -26,28 +26,25 @@ class Voice:
 
     async def play_async(self, file_path: str):
         logging.debug(f'Starting playing {file_path}')
-        if (not self.is_connected()):
-            raise Exception('Voice client is not connected')
 
         client = self._get_client()
         client.stop()
-        
-        while (client.is_playing()):
-            await asyncio.sleep(1)
 
-        stop_event = asyncio.Event()
+        await self.stop_event.wait()
+        self.stop_event.clear()
+        
         loop = asyncio.get_event_loop()
         def after(error):
             if error:
                 logging.error(error)
             def clear():
-                stop_event.set()
+                self.stop_event.set()
             loop.call_soon_threadsafe(clear)
 
         audio = PCMVolumeTransformer(discord.FFmpegPCMAudio(file_path), 1)
         client.play(audio, after=after)
 
-        await stop_event.wait()
+        await self.stop_event.wait()
         logging.debug(f'Finished playing {file_path}')
 
     async def join_channel(self, voice_channel):

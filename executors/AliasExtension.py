@@ -30,7 +30,10 @@ class AliasExtension(DiscordExtension):
         await ctx.msg_callback(f'Alias "{alias}" has been successfully added')
 
     def list_commands(self):
-        return ['alias <alias> <replacer>']
+        array = ['alias <alias> <replacer>']
+        for alias in self.cfg['aliases']:
+            array.append(f'{alias[0]} -> {alias[1]}')
+        return array
 
     async def initialize(self, bot):
         pass

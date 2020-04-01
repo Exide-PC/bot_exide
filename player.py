@@ -135,10 +135,10 @@ class Player(Voice):
         self.queue.append(item)
 
     def skip(self):
-        self.current_item = None
         super().stop()
 
     def stop(self):
+        self.is_repeat_mode = False
         self.queue.clear()
         self.skip()
 

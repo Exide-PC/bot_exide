@@ -13,6 +13,8 @@ from gachi_service import GachiService
 import re
 import logging
 import abc
+import os
+import sys
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -160,6 +162,10 @@ async def on_message(message):
         embed.description = text
         await context.msg_callback(None, embed)
         return
+    
+    elif (context.cmd == 'reboot'):
+        os.system('start startup.py')
+        sys.exit()
 
     for executor in executors:
         if (not executor.isserving(context)):

@@ -12,7 +12,7 @@ class AliasExtension(DiscordExtension):
 
     @property
     def name(self):
-        return 'Alias commands'
+        return 'Aliases'
 
     def isserving(self, ctx: ExecutionContext):
         return ctx.cmd in ['alias']

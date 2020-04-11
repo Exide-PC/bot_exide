@@ -78,7 +78,7 @@ class YoutubeService:
         if (playlist == None):
             await self.enqueue_video(video_id[0], None, ctx, time_code)
         else:
-            index = int(index[0]) if index != None else 0
+            index = index and int(index[0])
             await self.enqueue_playlist(playlist[0], ctx, index)
 
     async def enqueue_video(self, video_id, title, ctx, time_code=None):

@@ -33,6 +33,7 @@ class Voice:
         client = self._get_client()
         client.stop()
 
+        logging.debug(f'Stop event is {"not" if not self.stop_event.is_set() else ""}set')
         await self.stop_event.wait()
         self.stop_event.clear()
         
@@ -58,6 +59,7 @@ class Voice:
                 await self._get_client().move_to(voice_channel)
             else:
                 logging.warning('Not connected voice client encountered, something bad is going to happen...')
+                self.stop_event.set()
                 await self._get_client().move_to(voice_channel)
                 await self.disconnect()
                 await voice_channel.connect()
@@ -91,6 +93,7 @@ class Player(Voice):
         # asyncio.create_task(self.loop())
         
     async def loop(self):
+        logging.info('Starting player loop')
         while (True):
             try:
                 while (self.is_queue_mode and (len(self.queue) > 0)):

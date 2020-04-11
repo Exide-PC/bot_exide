@@ -5,8 +5,7 @@ from discord.voice_client import VoiceClient
 from threading import Thread
 from discord.player import PCMVolumeTransformer
 import logging
-
-
+import uuid
 
 class Item:
     def __init__(self, path_callback, title):
@@ -87,13 +86,17 @@ class Player(Voice):
     is_repeat_mode = False
     queue = []
     current_item = None
+    loop_id = None
 
     def __init__(self):
         super().__init__()
         # asyncio.create_task(self.loop())
         
     async def loop(self):
-        logging.info('Starting player loop')
+        counter = 0
+        loop_id = uuid.uuid4().__str__()
+        short_id = loop_id[0:7]
+        logging.info(f'Starting player loop ({loop_id})')
         while (True):
             try:
                 while (self.is_queue_mode and (len(self.queue) > 0)):
@@ -101,10 +104,10 @@ class Player(Voice):
                         await asyncio.sleep(1)
 
                     self.current_item = self.queue.pop(0)
-                    logging.info(f'Dequeued item {self.current_item.title}')
+                    logging.info(f'Dequeued item {self.current_item.title} ({short_id})')
 
                     file_path = await self.get_path(self.current_item)
-                    logging.info(f'Received file path: {file_path if file_path != None else "None"}')
+                    logging.info(f'Received file path: {file_path if file_path != None else "None"} ({short_id})')
                     if (file_path == None):
                         continue
 
@@ -118,6 +121,9 @@ class Player(Voice):
             finally:
                 self.current_item = None
                 await asyncio.sleep(1)
+                counter += 1
+                if (counter % 1200 == 0):
+                    logging.debug(f'Loop guid: {short_id}')
 
     async def get_path(self, item: Item):
         attempt_limit = 3

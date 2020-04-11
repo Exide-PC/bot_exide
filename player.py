@@ -95,7 +95,7 @@ class Player(Voice):
     async def loop(self):
         counter = 0
         loop_id = uuid.uuid4().__str__()
-        short_id = loop_id[0:7]
+        short_id = loop_id[0:8]
         logging.info(f'Starting player loop ({loop_id})')
         while (True):
             try:

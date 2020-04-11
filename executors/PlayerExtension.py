@@ -2,11 +2,13 @@ from bot import DiscordExtension, ExecutionContext
 from player import Player
 import asyncio
 import discord
+import logging
 
 class PlayerExtension(DiscordExtension):
     def __init__(self, player):
         super().__init__()
         self.player = player
+        self.task = None
 
     @property
     def name(self):
@@ -73,4 +75,9 @@ class PlayerExtension(DiscordExtension):
         if (prev_voice != None):
             await player.join_channel(prev_voice.channel)
 
-        asyncio.create_task(player.loop())
+        if (self.task):
+            logging.debug('Encountered already running player loop:')
+            logging.debug(self.task)
+
+        self.task = player.loop()
+        asyncio.create_task(self.task)

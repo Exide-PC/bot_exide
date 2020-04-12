@@ -164,8 +164,10 @@ async def on_message(message):
         return
     
     elif (context.cmd == 'reboot'):
-        os.system('start startup.py')
-        sys.exit()
+        if (context.author.id in config['admins']):
+            logging.info(f'{context.author.display_name} invoked reboot')
+            os.system('start startup.py')
+            sys.exit()
 
     for executor in executors:
         if (not executor.isserving(context)):

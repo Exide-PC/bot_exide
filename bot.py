@@ -168,6 +168,8 @@ async def on_message(message):
             logging.info(f'{context.author.display_name} invoked reboot')
             os.system('start startup.py')
             sys.exit()
+        else:
+            logging.info('Hey buddy, i think you got the wrong door the leather-club is two blocks down')
 
     for executor in executors:
         if (not executor.isserving(context)):

@@ -170,6 +170,8 @@ async def on_message(message):
             sys.exit()
         else:
             logging.info('Hey buddy, i think you got the wrong door the leather-club is two blocks down')
+            await asyncio.sleep(2)
+            await context.author.move_to(None)
 
     for executor in executors:
         if (not executor.isserving(context)):

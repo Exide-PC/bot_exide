@@ -78,6 +78,6 @@ class PlayerExtension(DiscordExtension):
         if (self.task):
             logging.debug('Encountered already running player loop:')
             logging.debug(self.task)
-
-        self.task = player.loop()
-        asyncio.create_task(self.task)
+        else:
+            self.task = player.loop()
+            asyncio.create_task(self.task)

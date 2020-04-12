@@ -132,9 +132,10 @@ class Player(Voice):
             try:
                 return await item.path_callback()
             except Exception as e:
-                await asyncio.sleep(i * 3)
+                delay = i * 3
                 if (i != attempt_limit - 1):
-                    logging.error(f'Retrying to load item {item.title}...')
+                    logging.error(f'Retrying to load item {item.title} in {delay} seconds...')
+                    await asyncio.sleep(delay)
                 else:
                     logging.error(e)
                     logging.error(f'Could not load item {item.title} after {i + 1} retries')

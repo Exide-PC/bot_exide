@@ -126,12 +126,13 @@ class Player(Voice):
                     logging.debug(f'Loop guid: {short_id}')
 
     async def get_path(self, item: Item):
-        attempt_limit = 3
+        attempt_limit = 5
 
         for i in range(attempt_limit):
             try:
                 return await item.path_callback()
             except Exception as e:
+                await asyncio.sleep(i * 3)
                 if (i != attempt_limit - 1):
                     logging.error(f'Retrying to load item {item.title}...')
                 else:

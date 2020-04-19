@@ -169,7 +169,8 @@ async def on_message(message):
             os.system('start startup.py')
             sys.exit()
         else:
-            logging.info('Hey buddy, i think you got the wrong door the leather-club is two blocks down')
+            logging.info(f'Unathorized reboot attempt from {context.author.display_name}, kicking...')
+            await context.msg_callback('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
             await asyncio.sleep(2)
             await context.author.move_to(None)
 

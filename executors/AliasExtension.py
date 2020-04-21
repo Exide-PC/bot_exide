@@ -31,8 +31,9 @@ class AliasExtension(DiscordExtension):
 
     def list_commands(self):
         array = ['alias <alias> <replacer>']
+        aliases = 'list: '
         for alias in self.cfg['aliases']:
-            array.append(f'{alias[0]} -> {alias[1]}')
+            aliases += f'{alias[0]}, '
         return array
 
     async def initialize(self, bot):

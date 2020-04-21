@@ -32,7 +32,6 @@ class Voice:
         client = self._get_client()
         client.stop()
 
-        logging.debug(f'Stop event is {"not" if not self.stop_event.is_set() else ""}set')
         await self.stop_event.wait()
         self.stop_event.clear()
         

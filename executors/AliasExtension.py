@@ -33,7 +33,8 @@ class AliasExtension(DiscordExtension):
         array = ['alias <alias> <replacer>']
         aliases = 'list: '
         for alias in self.cfg['aliases']:
-            aliases += f'{alias[0]}, '
+            aliases += f' {alias[0]}'
+        array.append(aliases)
         return array
 
     async def initialize(self, bot):

@@ -15,6 +15,7 @@ import logging
 import abc
 import os
 import sys
+from concurrent.futures.thread import ThreadPoolExecutor
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -23,7 +24,7 @@ config = None
 executors = None
 
 class ExecutionContext:
-    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback):
+    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback, execute_blocking):
         self.cmd = cmd
         self.args = args
         self.msg = msg
@@ -31,6 +32,7 @@ class ExecutionContext:
         self.author_vc = author_vc
         self.msg_callback = msg_callback
         self.choice_callback = choice_callback
+        self.execute_blocking = execute_blocking
 
 class DiscordExtension(abc.ABC):
     @property
@@ -140,6 +142,17 @@ async def on_message(message):
     async def choice_callback(options: []):
         return await choice(options, author.id, send_message)    
 
+    async def execute_blocking(fun):
+        logging.info('Executing blocking function...')
+        executor = ThreadPoolExecutor(1)
+        loop = asyncio.get_event_loop()
+        blocking_tasks = [loop.run_in_executor(executor, fun)]
+        completed, pending = await asyncio.wait(blocking_tasks)
+        for t in completed:
+            result = t.result()
+            logging.info(f'Executed blocking function. Result: {result}')
+            return result
+
     context = ExecutionContext(
         cmd,
         args if len(args) > 0 else None,
@@ -147,7 +160,8 @@ async def on_message(message):
         author,
         author_vc,
         send_message,
-        choice_callback
+        choice_callback,
+        execute_blocking
     )
 
     if (context.cmd == 'help'):

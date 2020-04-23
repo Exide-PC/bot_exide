@@ -76,7 +76,8 @@ class YoutubeService:
 
         # only video id was found
         if (playlist == None):
-            await self.enqueue_video(video_id[0], None, ctx, time_code)
+            title = get_video_title(video_id[0])
+            await self.enqueue_video(video_id[0], title, ctx, time_code)
         else:
             index = index and int(index[0])
             await self.enqueue_playlist(playlist[0], ctx, index)
@@ -100,9 +101,6 @@ class YoutubeService:
         await ctx.msg_callback(f'Enqueued {len(items)} playlist items :>')
 
     def _enqueue(self, video_id, title, ctx, time_code=None):
-        if (title == None):
-            title = f'#{video_id}'
-            
         async def item_callback():
             attempt_counter = 0
             file_path = None
@@ -166,6 +164,20 @@ def playlist_items(listId: str) -> []:
             break
 
     return videos
+
+def get_video_title(videoId: str) -> str:
+    url = "https://www.googleapis.com/youtube/v3/videos"
+
+    params = {
+        'key': token,
+        'id': videoId,
+        'part': 'contentDetails,snippet'
+    }
+    req = PreparedRequest()
+    req.prepare_url(url, params)
+
+    json = requests.get(req.url).json()
+    return json['items'][0]['snippet']['title']
 
 def _search(query: str):
     url = "https://www.googleapis.com/youtube/v3/search"

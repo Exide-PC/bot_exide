@@ -107,19 +107,24 @@ class YoutubeService:
             attempt_counter = 0
             file_path = None
 
+            def download():
+                return (
+                    downlad_and_trunc_sound(video_id, time_code)
+                    if time_code != None else
+                    download_sound(video_id) 
+                )
+
             while (attempt_counter < 3):
                 try:
-                    if (time_code == None):
-                        file_path = await ctx.execute_blocking(download_sound, video_id)
-                    else:
-                        try:
-                            file_path = await ctx.execute_blocking(downlad_and_trunc_sound, video_id, time_code)
-                        except ValueError:
-                            await ctx.msg_callback('Incorrent timecode input')
-                            return
-                    break
-                except Exception:
-                    attempt_counter += 1
+                    file_path = await ctx.execute_blocking(download)
+                    if (file_path):
+                        break
+                except ValueError:
+                    await ctx.msg_callback('Incorrent timecode input')
+                    return
+                except:
+                    pass
+                attempt_counter += 1
 
             if (file_path == None):
                 await ctx.msg_callback(f'Download failed after {attempt_counter} retries :c')

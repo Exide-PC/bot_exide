@@ -110,14 +110,10 @@ class YoutubeService:
             while (attempt_counter < 3):
                 try:
                     if (time_code == None):
-                        def download():
-                            return download_sound(video_id)
-                        file_path = await ctx.execute_blocking(download)
+                        file_path = await ctx.execute_blocking(download_sound, video_id)
                     else:
                         try:
-                            def download():
-                                return downlad_and_trunc_sound(video_id, time_code)
-                            file_path = await ctx.execute_blocking(download)
+                            file_path = await ctx.execute_blocking(downlad_and_trunc_sound, video_id, time_code)
                         except ValueError:
                             await ctx.msg_callback('Incorrent timecode input')
                             return

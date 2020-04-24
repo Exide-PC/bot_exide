@@ -7,6 +7,7 @@ from player import Player
 from urllib.parse import urlparse, parse_qs
 import re
 import html
+import logging
 
 load_dotenv()
 token = os.getenv('GOOGLE_TOKEN')
@@ -171,6 +172,7 @@ def get_video_title_cache(videoId: str, ctx):
     title = next((ct[1] for ct in cached_titles if ct[0] == videoId), None)
     if (not title):
         title = get_video_title(videoId)
+        logging.info(f"No cached title for video id '{videoId}' was found. API query result: '{title}'")
         config['video-titles'].append([videoId, title])
         ctx.update_config(config)
     return title

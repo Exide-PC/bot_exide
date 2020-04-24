@@ -66,7 +66,8 @@ if (not os.path.exists(cfg_path)):
                 youtube.playlist_items(gachi_playlist1) + 
                 youtube.playlist_items(gachi_playlist2),
             'aliases': [],
-            'admins': []
+            'admins': [],
+            'video-titles': []
         }
         json.dump(cfg, f, indent=4)
 else:

@@ -76,7 +76,7 @@ class YoutubeService:
 
         # only video id was found
         if (playlist == None):
-            title = get_video_title(video_id[0])
+            title = get_video_title_cache(video_id[0], ctx)
             await self.enqueue_video(video_id[0], title, ctx, time_code)
         else:
             index = index and int(index[0])
@@ -165,7 +165,18 @@ def playlist_items(listId: str) -> []:
 
     return videos
 
+def get_video_title_cache(videoId: str, ctx):
+    config = ctx.config
+    cached_titles = config['video-titles']
+    title = next((ct[1] for ct in cached_titles if ct[0] == videoId), None)
+    if (not title):
+        title = get_video_title(videoId)
+        config['video-titles'].append([videoId, title])
+        ctx.update_config(config)
+    return title
+
 def get_video_title(videoId: str) -> str:
+    
     url = "https://www.googleapis.com/youtube/v3/videos"
 
     params = {

@@ -38,7 +38,7 @@ class GachiExtension(DiscordExtension):
         elif (cmd == 'stop' and service.is_radio):
             service.stop()
 
-    def list_commands(self):
+    def list_commands(self, ctx: ExecutionContext):
         return ['gachi', 'skip', 'stop']
 
     async def initialize(self, bot):

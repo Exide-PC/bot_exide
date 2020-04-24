@@ -81,9 +81,7 @@ executors = [
     PlayerExtension(player),
     YoutubeExtension(youtube),
     GachiExtension(gachi),
-    AliasExtension(cfg, update_cfg)
+    AliasExtension()
 ]
 
-bot.start(discord_token, cfg, executors)
-
-
+bot.start(discord_token, cfg, executors, update_cfg)

@@ -26,7 +26,7 @@ class YoutubeExtension(DiscordExtension):
         elif (cmd == 'search'):
             await service.search(args, ctx)
 
-    def list_commands(self):
+    def list_commands(self, ctx: ExecutionContext):
         return [
             'play <video url>',
             'play <timecode> <video url> (timecodes: 13:37, 13:37-14:56)',

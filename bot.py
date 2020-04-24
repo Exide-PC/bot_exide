@@ -21,10 +21,12 @@ from concurrent.futures.thread import ThreadPoolExecutor
 
 bot = commands.Bot(command_prefix = '')
 config = None
+update_config = (lambda cfg: None)
 executors = None
 
 class ExecutionContext:
-    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback, execute_blocking):
+    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback):
+        global execute_blocking, config
         self.cmd = cmd
         self.args = args
         self.msg = msg
@@ -33,6 +35,12 @@ class ExecutionContext:
         self.msg_callback = msg_callback
         self.choice_callback = choice_callback
         self.execute_blocking = execute_blocking
+        self.config = config
+
+    def update_config(self, new_cfg):
+        global update_config
+        update_config(new_cfg)
+        self.config = new_cfg
 
 class DiscordExtension(abc.ABC):
     @property
@@ -49,7 +57,7 @@ class DiscordExtension(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def list_commands(self):
+    def list_commands(self, ctx: ExecutionContext):
         pass
 
     async def initialize(self, bot):
@@ -79,6 +87,7 @@ async def choice(options: [], user_id, msg_callback):
         await bot.wait_for('message', check=check, timeout=20)
         return result
     except asyncio.TimeoutError:
+        await msg_callback('Choice timeout')
         pass
 
 def find_replacer(msg):
@@ -116,6 +125,17 @@ async def on_voice_state_update(member, before, after):
     await member.move_to(before.channel)
     await shved.move_to(after_copy)
 
+async def execute_blocking(fun, *args):
+    logging.info('Executing blocking function...')
+    executor = ThreadPoolExecutor(1)
+    loop = asyncio.get_event_loop()
+    blocking_tasks = [loop.run_in_executor(executor, fun, *args)]
+    completed, pending = await asyncio.wait(blocking_tasks)
+    for t in completed:
+        result = t.result()
+        logging.info(f'Executed blocking function. Result: {result}')
+        return result
+
 @bot.event
 async def on_message(message):
     if (message.channel.type.name != 'private' and 
@@ -142,17 +162,6 @@ async def on_message(message):
     async def choice_callback(options: []):
         return await choice(options, author.id, send_message)    
 
-    async def execute_blocking(fun, *args):
-        logging.info('Executing blocking function...')
-        executor = ThreadPoolExecutor(1)
-        loop = asyncio.get_event_loop()
-        blocking_tasks = [loop.run_in_executor(executor, fun, *args)]
-        completed, pending = await asyncio.wait(blocking_tasks)
-        for t in completed:
-            result = t.result()
-            logging.info(f'Executed blocking function. Result: {result}')
-            return result
-
     context = ExecutionContext(
         cmd,
         args if len(args) > 0 else None,
@@ -160,8 +169,7 @@ async def on_message(message):
         author,
         author_vc,
         send_message,
-        choice_callback,
-        execute_blocking
+        choice_callback
     )
 
     if (context.cmd == 'help'):
@@ -169,7 +177,7 @@ async def on_message(message):
         for i in range(len(executors)):
             executor = executors[i]
             text += f'{i + 1}. {executor.name}\n'
-            for command in executor.list_commands():
+            for command in executor.list_commands(context):
                 text += f'- {command}\n'
             text += '\n'
         embed = discord.Embed()
@@ -203,7 +211,7 @@ async def on_ready():
 
     logging.info(f'{bot.user} has connected')
 
-def start(token: str, cfg, command_executors):
-    global config, executors
-    config, executors = cfg, command_executors
+def start(token: str, cfg, command_executors, update_cfg):
+    global config, executors, update_config
+    config, executors, update_config = cfg, command_executors, update_cfg
     bot.run(token)

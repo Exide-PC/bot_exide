@@ -64,7 +64,7 @@ class PlayerExtension(DiscordExtension):
             embed.description = queue
             await ctx.msg_callback(queue, embed=embed)
 
-    def list_commands(self):
+    def list_commands(self, ctx: ExecutionContext):
         return ['join', 'disc', 'skip', 'stop', 'repeat', 'queue']
 
     async def initialize(self, bot):

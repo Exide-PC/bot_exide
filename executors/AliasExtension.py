@@ -5,10 +5,8 @@ import discord
 import logging
 
 class AliasExtension(DiscordExtension):
-    def __init__(self, cfg, update_cfg):
+    def __init__(self):
         super().__init__()
-        self.cfg = cfg
-        self.update_cfg = update_cfg
 
     @property
     def name(self):
@@ -26,13 +24,13 @@ class AliasExtension(DiscordExtension):
             return
         alias = args[:separator]
         replacer = args[separator + 1:]
-        self.add_alias(alias, replacer)
+        self.add_alias(alias, replacer, ctx)
         await ctx.msg_callback(f'Alias "{alias}" has been successfully added')
 
-    def list_commands(self):
+    def list_commands(self, ctx: ExecutionContext):
         array = ['alias <alias> <replacer>']
         aliases = 'list: '
-        for alias in self.cfg['aliases']:
+        for alias in ctx.config['aliases']:
             aliases += f' {alias[0]}'
         array.append(aliases)
         return array
@@ -40,8 +38,9 @@ class AliasExtension(DiscordExtension):
     async def initialize(self, bot):
         pass
 
-    def add_alias(self, cmd: str, replacer: str):
-        current_aliases = list(map(lambda a: a[0], self.cfg['aliases']))
+    def add_alias(self, cmd: str, replacer: str, ctx: ExecutionContext):
+        cfg = ctx.config
+        current_aliases = list(map(lambda a: a[0], cfg['aliases']))
 
         index = -1
         if (cmd in current_aliases):
@@ -49,8 +48,9 @@ class AliasExtension(DiscordExtension):
 
         alias = [cmd, replacer]
         if (index == -1):
-            self.cfg['aliases'].append(alias)
+
+            cfg['aliases'].append(alias)
         else:
-            self.cfg['aliases'][index] = alias
+            cfg['aliases'][index] = alias
             
-        self.update_cfg(self.cfg)
+        ctx.update_config(cfg)

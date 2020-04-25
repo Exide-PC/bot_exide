@@ -16,6 +16,7 @@ import abc
 import os
 import sys
 from concurrent.futures.thread import ThreadPoolExecutor
+from models.ExecutionException import ExecutionException
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -142,18 +143,15 @@ async def on_message(message):
         message.channel.name != 'bot-exide' or
         message.author == bot.user): return
 
-    message.content = find_replacer(message.content).strip()
+    final_message = find_replacer(message.content).strip()
 
     # we also need the 'voice' property which is not being
     # passed in case the message was received via PM
     author = bot.guilds[0].get_member(message.author.id)
     author_vc = author.voice.channel if author.voice != None else None
     
-    msg = message.content.lower()
-    logging.info(f'{author.display_name} is executing command "{msg}"')
-
-    cmd = message.content.split(' ')[0].lower()
-    args = message.content[len(cmd) + 1:].strip()
+    cmd = final_message.split(' ')[0].lower()
+    args = final_message[len(cmd) + 1:].strip()
 
     async def send_message(msg: str = None, embed: discord.Embed = None):
         logging.info(f'Sending message "{msg}" {"(with embed)" if embed else ""}')
@@ -165,7 +163,7 @@ async def on_message(message):
     context = ExecutionContext(
         cmd,
         args if len(args) > 0 else None,
-        message.content,
+        final_message,
         author,
         author_vc,
         send_message,
@@ -199,10 +197,14 @@ async def on_message(message):
     for executor in executors:
         if (not executor.isserving(context)):
             continue
+        logging.info(f'{author.display_name} is executing command "{message.content}"')
         try:
             await executor.execute(context)
+        except ExecutionException as e:
+            await context.msg_callback(e)
+            logging.error(f'Error occured during message processing: {e}')
         except Exception as e:
-            logging.error(f'Error occured during "{context.msg}" message processing. {e}')
+            logging.error(f'Unknown error occured during "{context.msg}" message processing. {e}')
         
 @bot.event
 async def on_ready():

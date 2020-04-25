@@ -8,6 +8,7 @@ from urllib.parse import urlparse, parse_qs
 import re
 import html
 import logging
+from models.ExecutionException import ExecutionException
 
 load_dotenv()
 token = os.getenv('GOOGLE_TOKEN')
@@ -154,6 +155,13 @@ def playlist_items(listId: str) -> []:
 
         json = requests.get(req.url).json()
         nextPageToken = json.get('nextPageToken')
+
+        error = json.get('error')
+        if (error):
+            if (error['code'] == 404):
+                raise ExecutionException('Playlist not found')
+            else:
+                raise Exception(error['message'])
         
         for item in json['items']:
             videos.append({
@@ -178,7 +186,6 @@ def get_video_title_cache(videoId: str, ctx):
     return title
 
 def get_video_title(videoId: str) -> str:
-    
     url = "https://www.googleapis.com/youtube/v3/videos"
 
     params = {
@@ -190,6 +197,9 @@ def get_video_title(videoId: str) -> str:
     req.prepare_url(url, params)
 
     json = requests.get(req.url).json()
+    if (len(json['items']) == 0):
+        raise ExecutionException('Video not found')
+
     return json['items'][0]['snippet']['title']
 
 def _search(query: str):

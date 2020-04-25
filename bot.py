@@ -163,6 +163,9 @@ async def on_message(message):
 
     def loading_callback(stop_event):
         async def loading_async():
+            await asyncio.sleep(3)
+            if (stop_event.is_set()): return
+            
             status_message = await send_message('Loading')
             counter = 0
             while (not stop_event.is_set()):

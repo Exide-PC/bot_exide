@@ -9,6 +9,7 @@ import re
 import html
 import logging
 from models.ExecutionException import ExecutionException
+import asyncio
 
 load_dotenv()
 token = os.getenv('GOOGLE_TOKEN')
@@ -106,13 +107,17 @@ class YoutubeService:
         async def item_callback():
             attempt_counter = 0
             file_path = None
+            stop_event = asyncio.Event()
+            ctx.loading_callback(stop_event)
 
             def download():
-                return (
+                file_path = (
                     downlad_and_trunc_sound(video_id, time_code)
                     if time_code != None else
                     download_sound(video_id) 
                 )
+                stop_event.set()
+                return file_path
 
             while (attempt_counter < 3):
                 try:

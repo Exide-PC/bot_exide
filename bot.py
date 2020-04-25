@@ -26,7 +26,7 @@ update_config = (lambda cfg: None)
 executors = None
 
 class ExecutionContext:
-    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback):
+    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback, loading_callback):
         global execute_blocking, config
         self.cmd = cmd
         self.args = args
@@ -37,6 +37,7 @@ class ExecutionContext:
         self.choice_callback = choice_callback
         self.execute_blocking = execute_blocking
         self.config = config
+        self.loading_callback = loading_callback
 
     def update_config(self, new_cfg):
         global update_config
@@ -155,10 +156,24 @@ async def on_message(message):
 
     async def send_message(msg: str = None, embed: discord.Embed = None):
         logging.info(f'Sending message "{msg}" {"(with embed)" if embed else ""}')
-        await message.channel.send(content=msg, embed=embed)
+        return await message.channel.send(content=msg, embed=embed)
 
     async def choice_callback(options: []):
-        return await choice(options, author.id, send_message)    
+        return await choice(options, author.id, send_message)
+
+    def loading_callback(stop_event):
+        async def loading_async():
+            status_message = await send_message('Loading')
+            counter = 0
+            while (not stop_event.is_set()):
+                dots = counter % 3 + 1
+                await status_message.edit(content=f'Loading{"." * dots}')
+                await asyncio.sleep(1)
+                counter += 1
+            await status_message.delete()
+
+        loop = asyncio.get_event_loop()
+        loop.create_task(loading_async())
 
     context = ExecutionContext(
         cmd,
@@ -167,7 +182,8 @@ async def on_message(message):
         author,
         author_vc,
         send_message,
-        choice_callback
+        choice_callback,
+        loading_callback
     )
 
     if (context.cmd == 'help'):

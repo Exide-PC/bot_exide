@@ -111,13 +111,11 @@ class YoutubeService:
             ctx.loading_callback(stop_event)
 
             def download():
-                file_path = (
+                return (
                     downlad_and_trunc_sound(video_id, time_code)
                     if time_code != None else
                     download_sound(video_id) 
                 )
-                stop_event.set()
-                return file_path
 
             while (attempt_counter < 3):
                 try:
@@ -131,6 +129,8 @@ class YoutubeService:
                     pass
                 attempt_counter += 1
 
+            stop_event.set()
+            
             if (file_path == None):
                 await ctx.msg_callback(f'Download failed after {attempt_counter} retries :c')
                 return

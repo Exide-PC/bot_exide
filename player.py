@@ -27,13 +27,13 @@ class Voice:
         return self.bot.voice_clients[0]
 
     async def play_async(self, file_path: str):
-        logging.debug(f'Starting playing {file_path}')
-
         client = self._get_client()
         client.stop()
 
         await self.stop_event.wait()
         self.stop_event.clear()
+
+        logging.info(f'Starting playing {file_path}')
         
         loop = asyncio.get_event_loop()
         def after(error):

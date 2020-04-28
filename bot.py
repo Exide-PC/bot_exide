@@ -183,12 +183,12 @@ async def on_message(message):
             _strictMode = not _strictMode
             await context.msg_callback(f'Strict mode: {"On" if _strictMode else "Off"}')
 
-    if (_strictMode and not context.isadmin):
-        return
-
     for executor in _executors:
         if (not executor.isserving(context)):
             continue
+        if (_strictMode and not context.isadmin):
+            await context.msg_callback('Bot is in strict mode. Only admins can run commands')
+            return
         logging.info(f'{author.display_name} is executing command "{message.content}"')
         try:
             await executor.execute(context)

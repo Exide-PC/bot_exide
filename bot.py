@@ -179,6 +179,7 @@ async def on_message(message):
 
     elif (context.cmd == 'strict'):
         if (context.isadmin):
+            global _strictMode
             _strictMode = not _strictMode
             await context.msg_callback(f'Strict mode: {"On" if _strictMode else "Off"}')
 

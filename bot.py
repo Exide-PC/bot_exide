@@ -116,6 +116,7 @@ async def on_message(message):
     args = final_message[len(cmd) + 1:].strip()
 
     async def send_message(msg: str = None, embed: discord.Embed = None):
+        msg = msg and f'**{msg}**'
         logging.info(f'Sending message "{msg}" {"(with embed)" if embed else ""}')
         return await message.channel.send(content=msg, embed=embed)
 

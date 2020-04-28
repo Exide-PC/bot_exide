@@ -1,4 +1,5 @@
-from bot import DiscordExtension, ExecutionContext
+from models.DiscordExtension import DiscordExtension
+from models.ExecutionContext import ExecutionContext
 from player import Player
 import asyncio
 import discord

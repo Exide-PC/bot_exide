@@ -13,6 +13,7 @@ from executors.PlayerExtension import PlayerExtension
 from executors.GachiExtension import GachiExtension
 from executors.YoutubeExtension import YoutubeExtension
 from executors.AliasExtension import AliasExtension
+from repositories.configRepository import ConfigRepository
 
 def set_logger():
     class LogFilter(logging.Filter):
@@ -29,7 +30,7 @@ def set_logger():
     logFilter = LogFilter()
 
     rootLogger = logging.getLogger()
-    rootLogger.setLevel(logging.DEBUG)
+    rootLogger.setLevel(logging.INFO)
 
     fileHandler = logging.FileHandler('log.txt', 'a', 'utf-8')
     fileHandler.addFilter(logFilter)
@@ -74,15 +75,16 @@ else:
     with open(cfg_path, 'r') as f:
         cfg = json.load(f)
 
+configRepo = ConfigRepository(cfg, update_cfg)
 player = Player()
-gachi = GachiService(player, cfg['gachi'])
-youtube = YoutubeService(player)
+gachi = GachiService(player, configRepo)
+youtube = YoutubeService(player, configRepo)
 
 executors = [
     PlayerExtension(player),
     YoutubeExtension(youtube),
     GachiExtension(gachi),
-    AliasExtension()
+    AliasExtension(configRepo)
 ]
 
-bot.start(discord_token, cfg, executors, update_cfg)
+bot.start(discord_token, executors, configRepo)

@@ -17,8 +17,9 @@ token = os.getenv('GOOGLE_TOKEN')
 class YoutubeService:
     _player = None
 
-    def __init__(self, player: Player):
+    def __init__(self, player: Player, configRepo):
         self._player = player
+        self.configRepo = configRepo
 
     async def search(self, query, ctx):
         selected_index = None
@@ -179,15 +180,15 @@ def playlist_items(listId: str) -> []:
 
     return videos
 
-def get_video_title_cache(videoId: str, ctx):
-    config = ctx.config
+def get_video_title_cache(videoId: str, configRepo):
+    config = configRepo.config
     cached_titles = config['video-titles']
     title = next((ct[1] for ct in cached_titles if ct[0] == videoId), None)
     if (not title):
         title = get_video_title(videoId)
         logging.info(f"No cached title for video id '{videoId}' was found. API query result: '{title}'")
         config['video-titles'].append([videoId, title])
-        ctx.update_config(config)
+        configRepo.update_config(config)
     return title
 
 def get_video_title(videoId: str) -> str:

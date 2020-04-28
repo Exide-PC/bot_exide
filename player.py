@@ -47,7 +47,7 @@ class Voice:
         client.play(audio, after=after)
 
         await self.stop_event.wait()
-        logging.debug(f'Finished playing {file_path}')
+        logging.info(f'Finished playing {file_path}')
 
     async def join_channel(self, voice_channel):
         if (voice_channel == None): return

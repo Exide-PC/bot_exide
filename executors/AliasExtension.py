@@ -1,11 +1,13 @@
-from bot import DiscordExtension, ExecutionContext
+from models.DiscordExtension import DiscordExtension
+from models.ExecutionContext import ExecutionContext
 from player import Player
 import asyncio
 import discord
 import logging
 
 class AliasExtension(DiscordExtension):
-    def __init__(self):
+    def __init__(self, configRepo):
+        self.configRepo = configRepo
         super().__init__()
 
     @property
@@ -30,7 +32,7 @@ class AliasExtension(DiscordExtension):
     def list_commands(self, ctx: ExecutionContext):
         array = ['alias <alias> <replacer>']
         aliases = 'list: '
-        for alias in ctx.config['aliases']:
+        for alias in self.configRepo.config['aliases']:
             aliases += f' {alias[0]}'
         array.append(aliases)
         return array
@@ -39,7 +41,7 @@ class AliasExtension(DiscordExtension):
         pass
 
     def add_alias(self, cmd: str, replacer: str, ctx: ExecutionContext):
-        cfg = ctx.config
+        cfg = self.configRepo.config
         current_aliases = list(map(lambda a: a[0], cfg['aliases']))
 
         index = -1
@@ -52,5 +54,5 @@ class AliasExtension(DiscordExtension):
             cfg['aliases'].append(alias)
         else:
             cfg['aliases'][index] = alias
-            
-        ctx.update_config(cfg)
+
+        self.configRepo.update_config(cfg)

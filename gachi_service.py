@@ -96,6 +96,6 @@ class GachiService:
         self.is_radio = False
         self._player.skip()
 
-    def __init__(self, player: Player, gachi_list: []):
+    def __init__(self, player: Player, configRepo):
         self._player = player
-        self._gachi_list = gachi_list
+        self._gachi_list = configRepo.config['gachi']

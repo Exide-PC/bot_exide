@@ -12,58 +12,18 @@ from player import Player
 from gachi_service import GachiService
 import re
 import logging
-import abc
 import os
 import sys
 from concurrent.futures.thread import ThreadPoolExecutor
+from models.DiscordExtension import DiscordExtension
+from models.ExecutionContext import ExecutionContext
 from models.ExecutionException import ExecutionException
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
 bot = commands.Bot(command_prefix = '')
-config = None
-update_config = (lambda cfg: None)
-executors = None
-
-class ExecutionContext:
-    def __init__(self, cmd, args, msg, author, author_vc, msg_callback, choice_callback, loading_callback):
-        global execute_blocking, config
-        self.cmd = cmd
-        self.args = args
-        self.msg = msg
-        self.author = author
-        self.author_vc = author_vc
-        self.msg_callback = msg_callback
-        self.choice_callback = choice_callback
-        self.execute_blocking = execute_blocking
-        self.config = config
-        self.loading_callback = loading_callback
-
-    def update_config(self, new_cfg):
-        global update_config
-        update_config(new_cfg)
-        self.config = new_cfg
-
-class DiscordExtension(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def name(self):
-        pass
-
-    @abc.abstractmethod
-    def isserving(self, ctx: ExecutionContext):
-        pass
-
-    @abc.abstractmethod
-    async def execute(self, ctx: ExecutionContext):
-        pass
-
-    @abc.abstractmethod
-    def list_commands(self, ctx: ExecutionContext):
-        pass
-
-    async def initialize(self, bot):
-        pass
+_executors = None
+_configRepo = None
 
 async def choice(options: [], user_id, msg_callback):
     choice_hint = ""
@@ -95,7 +55,7 @@ async def choice(options: [], user_id, msg_callback):
 def find_replacer(msg):
     while(True):
         replacer = None
-        for alias in config['aliases']:
+        for alias in _configRepo.config['aliases']:
             if (alias[0].lower() == msg.lower()):
                 replacer = alias[1]
                 logging.info(f'Found suitable alias. Replacing "{alias[0]}" with "{alias[1]}"')
@@ -186,13 +146,14 @@ async def on_message(message):
         author_vc,
         send_message,
         choice_callback,
-        loading_callback
+        loading_callback,
+        execute_blocking
     )
 
     if (context.cmd == 'help'):
         text = ''
-        for i in range(len(executors)):
-            executor = executors[i]
+        for i in range(len(_executors)):
+            executor = _executors[i]
             text += f'{i + 1}. {executor.name}\n'
             for command in executor.list_commands(context):
                 text += f'- {command}\n'
@@ -203,7 +164,7 @@ async def on_message(message):
         return
     
     elif (context.cmd == 'reboot'):
-        if (context.author.id in config['admins']):
+        if (context.author.id in _configRepo.config['admins']):
             logging.info(f'{context.author.display_name} invoked reboot')
             os.system('start startup.py')
             sys.exit()
@@ -213,7 +174,7 @@ async def on_message(message):
             await asyncio.sleep(2)
             await context.author.move_to(None)
 
-    for executor in executors:
+    for executor in _executors:
         if (not executor.isserving(context)):
             continue
         logging.info(f'{author.display_name} is executing command "{message.content}"')
@@ -227,12 +188,12 @@ async def on_message(message):
         
 @bot.event
 async def on_ready():
-    for executor in executors:
+    for executor in _executors:
         await executor.initialize(bot)
 
     logging.info(f'{bot.user} has connected')
 
-def start(token: str, cfg, command_executors, update_cfg):
-    global config, executors, update_config
-    config, executors, update_config = cfg, command_executors, update_cfg
+def start(token: str, executors, configRepo):
+    global _executors, _configRepo
+    _executors, _configRepo = executors, configRepo
     bot.run(token)

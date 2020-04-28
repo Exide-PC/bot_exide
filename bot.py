@@ -24,6 +24,7 @@ from models.ExecutionException import ExecutionException
 bot = commands.Bot(command_prefix = '')
 _executors = None
 _configRepo = None
+_strictMode = False
 
 async def choice(options: [], user_id, msg_callback):
     choice_hint = ""
@@ -147,7 +148,8 @@ async def on_message(message):
         send_message,
         choice_callback,
         loading_callback,
-        execute_blocking
+        execute_blocking,
+        author.id in _configRepo.config['admins']
     )
 
     if (context.cmd == 'help'):
@@ -164,7 +166,7 @@ async def on_message(message):
         return
     
     elif (context.cmd == 'reboot'):
-        if (context.author.id in _configRepo.config['admins']):
+        if (context.isadmin):
             logging.info(f'{context.author.display_name} invoked reboot')
             os.system('git pull')
             os.system('start startup.py')
@@ -174,6 +176,14 @@ async def on_message(message):
             await context.msg_callback('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
             await asyncio.sleep(2)
             await context.author.move_to(None)
+
+    elif (context.cmd == 'strict'):
+        if (context.isadmin):
+            _strictMode = not _strictMode
+            await context.msg_callback(f'Strict mode: {"On" if _strictMode else "Off"}')
+
+    if (_strictMode and not context.isadmin):
+        return
 
     for executor in _executors:
         if (not executor.isserving(context)):

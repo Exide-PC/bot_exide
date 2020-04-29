@@ -15,5 +15,6 @@ class MessageFormatter:
         elif (type == MessageType.Embed):
             embed = Embed()
             embed.description = payload
+            content = None
 
         return (content, embed)

@@ -11,7 +11,7 @@ class MessageFormatter:
         embed = None
 
         if (type == MessageType.Common):
-            content = f'**{content}**'
+            content = f'**{payload}**'
         elif (type == MessageType.Embed):
             embed = Embed()
             embed.description = payload

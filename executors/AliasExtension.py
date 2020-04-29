@@ -22,12 +22,12 @@ class AliasExtension(DiscordExtension):
 
         separator = args.find(' ')
         if (separator == -1):
-            await ctx.msg_callback('Wrong alias syntax. Use "alias <alias> <replacer>"')
+            await ctx.send_message('Wrong alias syntax. Use "alias <alias> <replacer>"')
             return
         alias = args[:separator]
         replacer = args[separator + 1:]
         self.add_alias(alias, replacer, ctx)
-        await ctx.msg_callback(f'Alias "{alias}" has been successfully added')
+        await ctx.send_message(f'Alias "{alias}" has been successfully added')
 
     def list_commands(self, ctx: ExecutionContext):
         array = ['alias <alias> <replacer>']

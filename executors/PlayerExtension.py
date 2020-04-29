@@ -38,14 +38,14 @@ class PlayerExtension(DiscordExtension):
                 final_index = int(index) - 1
                 player.queue = player.queue[final_index:]
                 player.skip()
-                await ctx.msg_callback(f'Skipped to item #{final_index + 1}')
+                await ctx.send_message(f'Skipped to item #{final_index + 1}')
 
         elif (ctx.cmd == 'stop'):
             player.stop()
 
         elif (ctx.cmd == 'repeat'):
             is_repeat = not player.is_repeat_mode
-            await ctx.msg_callback(f'Repeat: {"On" if is_repeat else "Off"}')
+            await ctx.send_message(f'Repeat: {"On" if is_repeat else "Off"}')
             player.is_repeat_mode = is_repeat
 
         elif (ctx.cmd == 'queue'):
@@ -63,7 +63,7 @@ class PlayerExtension(DiscordExtension):
 
             embed = discord.Embed()
             embed.description = queue
-            await ctx.msg_callback(queue, embed=embed)
+            await ctx.send_message(queue, embed=embed)
 
     def list_commands(self, ctx: ExecutionContext):
         return ['join', 'disc', 'skip', 'stop', 'repeat', 'queue']

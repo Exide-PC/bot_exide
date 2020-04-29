@@ -26,13 +26,13 @@ _executors = None
 _configRepo = None
 _strictMode = False
 
-async def choice(options: [], user_id, msg_callback):
+async def choice(options: [], user_id, send_message):
     choice_hint = ""
     for i in range(len(options)):
         choice_hint += f'{i + 1}. {options[i]}'
         choice_hint += '\n' if i != len(options) - 1 else ''
 
-    await msg_callback(choice_hint)
+    await send_message(choice_hint)
     result = None
 
     def check(m):
@@ -50,7 +50,7 @@ async def choice(options: [], user_id, msg_callback):
         await bot.wait_for('message', check=check, timeout=20)
         return result
     except asyncio.TimeoutError:
-        await msg_callback('Choice timeout')
+        await send_message('Choice timeout')
         pass
 
 def find_replacer(msg):
@@ -163,7 +163,7 @@ async def on_message(message):
             text += '\n'
         embed = discord.Embed()
         embed.description = text
-        await context.msg_callback(None, embed)
+        await context.send_message(None, embed)
         return
     
     elif (context.cmd == 'reboot'):
@@ -174,7 +174,7 @@ async def on_message(message):
             sys.exit()
         else:
             logging.info(f'Unathorized reboot attempt from {context.author.display_name}, kicking...')
-            await context.msg_callback('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
+            await context.send_message('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
             await asyncio.sleep(2)
             await context.author.move_to(None)
 
@@ -182,19 +182,19 @@ async def on_message(message):
         if (context.isadmin):
             global _strictMode
             _strictMode = not _strictMode
-            await context.msg_callback(f'Strict mode: {"On" if _strictMode else "Off"}')
+            await context.send_message(f'Strict mode: {"On" if _strictMode else "Off"}')
 
     for executor in _executors:
         if (not executor.isserving(context)):
             continue
         if (_strictMode and not context.isadmin):
-            await context.msg_callback('Bot is in strict mode. Only admins can run commands')
+            await context.send_message('Bot is in strict mode. Only admins can run commands')
             return
         logging.info(f'{author.display_name} is executing command "{message.content}"')
         try:
             await executor.execute(context)
         except ExecutionException as e:
-            await context.msg_callback(e)
+            await context.send_message(e)
             logging.error(f'Error occured during message processing: {e}')
         except Exception as e:
             logging.error(f'Unknown error occured during "{context.msg}" message processing. {e}')

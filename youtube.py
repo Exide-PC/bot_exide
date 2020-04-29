@@ -30,7 +30,7 @@ class YoutubeService:
             
         search_results = _search(query)
         if (len(search_results) == 0):
-            await ctx.msg_callback('Nothing was found :c')
+            await ctx.send_message('Nothing was found :c')
             return
 
         if (selected_index == None): # not specified explicitly
@@ -76,7 +76,7 @@ class YoutubeService:
         index = query.get('index')
 
         if (playlist == None and video_id == None):
-            await ctx.msg_callback('Wrong url')
+            await ctx.send_message('Wrong url')
 
         # only video id was found
         if (playlist == None):
@@ -89,7 +89,7 @@ class YoutubeService:
     async def enqueue_video(self, video_id, title, ctx, time_code=None):
         self._enqueue(video_id, title, ctx, time_code)
         if (self._player.is_playing()):
-            await ctx.msg_callback(f'Your video was added to queue')
+            await ctx.send_message(f'Your video was added to queue')
 
     async def enqueue_playlist(self, playlistId, ctx, index = None):
         index = index - 2 if index != None else 0
@@ -102,7 +102,7 @@ class YoutubeService:
                 f'{item["title"]} (#{index + i + 1} in playlist)',
                 ctx
             )
-        await ctx.msg_callback(f'Enqueued {len(items)} playlist items :>')
+        await ctx.send_message(f'Enqueued {len(items)} playlist items :>')
 
     def _enqueue(self, video_id, title, ctx, time_code=None):
         async def item_callback():
@@ -124,7 +124,7 @@ class YoutubeService:
                     if (file_path):
                         break
                 except ValueError:
-                    await ctx.msg_callback('Incorrent timecode input')
+                    await ctx.send_message('Incorrent timecode input')
                     return
                 except:
                     pass
@@ -133,10 +133,10 @@ class YoutubeService:
             stop_event.set()
             
             if (file_path == None):
-                await ctx.msg_callback(f'Download failed after {attempt_counter} retries :c')
+                await ctx.send_message(f'Download failed after {attempt_counter} retries :c')
                 return
             
-            await ctx.msg_callback(f'Now playing: {title}')
+            await ctx.send_message(f'Now playing: {title}')
             await self._player.join_channel(ctx.author_vc)
             return file_path
 

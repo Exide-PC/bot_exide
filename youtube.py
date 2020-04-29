@@ -80,7 +80,7 @@ class YoutubeService:
 
         # only video id was found
         if (playlist == None):
-            title = get_video_title_cache(video_id[0], ctx)
+            title = get_video_title_cache(video_id[0], self.configRepo)
             await self.enqueue_video(video_id[0], title, ctx, time_code)
         else:
             index = index and int(index[0])

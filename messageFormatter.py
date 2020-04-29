@@ -7,7 +7,7 @@ class MessageType(Enum):
 
 class MessageFormatter:
     def format(self, payload, type: MessageType):
-        content = payload
+        content = None
         embed = None
 
         if (type == MessageType.Common):
@@ -15,6 +15,5 @@ class MessageFormatter:
         elif (type == MessageType.Embed):
             embed = Embed()
             embed.description = payload
-            content = None
 
         return (content, embed)

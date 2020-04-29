@@ -120,7 +120,7 @@ async def on_message(message):
     async def send_message(payload, messageType: MessageType = MessageType.Common):
         (content, embed) = _formatter.format(payload, messageType)
         logging.info(f'Sending message "{payload}"')
-        return await message.channel.send(content, embed)
+        return await message.channel.send(content=content, embed=embed)
 
     async def choice_callback(options: []):
         return await choice(options, author.id, send_message)

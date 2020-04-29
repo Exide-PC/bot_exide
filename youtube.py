@@ -36,7 +36,7 @@ class YoutubeService:
         if (selected_index == None): # not specified explicitly
             selected_index = await ctx.choice_callback(list(map(
                 lambda item:
-                    item['title'] + (f' [playlist]' if item['isPlaylist'] else ''),
+                    item['title'] + ' ' + (f'[playlist]' if item['isPlaylist'] else f'[{item["duration"]}]'),
                 search_results
             )))
             if (selected_index == None):
@@ -222,6 +222,7 @@ def _search(query: str):
     req.prepare_url(url, params)
 
     json = requests.get(req.url).json()
+    ids = []
 
     for item in json['items']:
         videoId = item['id'].get('videoId')
@@ -232,8 +233,37 @@ def _search(query: str):
             'title': html.unescape(item['snippet']['title']),
             'isPlaylist': playlistId != None
         })
+        if (videoId):
+            ids.append(videoId)
+
+    durations = get_video_durations(ids)
+
+    for i in range(len(results)):
+        item = results[i]
+        if (not item['isPlaylist']):
+            item['duration'] = durations[item['id']]
 
     return results
+
+def get_video_durations(ids: []):
+    url = "https://www.googleapis.com/youtube/v3/videos"
+
+    params = {
+        'key': token,
+        'id': ','.join(ids),
+        'part': 'contentDetails'
+    }
+    req = PreparedRequest()
+    req.prepare_url(url, params)
+
+    json = requests.get(req.url).json()
+    duration_map = {}
+    
+    for item in json['items']:
+        duration = parse_duration(item['contentDetails']['duration'])
+        duration_map[item['id']] = duration
+
+    return duration_map
 
 def download_sound(video_id: str) -> str:
     ext = 'webm'
@@ -299,3 +329,21 @@ if (__name__ == '__main__'):
     _trunc('music/7wtfhZwyrcc.webm', '1:01')
     # download_sound('7wtfhZwyrcc&t=60')
     # items = playlist_items('PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG')
+
+def parse_duration(raw_duration):
+    raw_duration = raw_duration[2:-1]
+
+    parts = re.split('[A-Z]', raw_duration)
+    parts.reverse()
+
+    seconds = parts[0]
+    minutes = len(parts) > 1 and parts[1] or 0
+    hours = len(parts) > 2 and parts[2] or 0
+
+    duration = ''
+    duration += f'{int(hours):02}:' if hours else ''
+    duration += f'{int(minutes):02}:'
+    duration += f'{int(seconds):02}'
+
+    return duration
+    

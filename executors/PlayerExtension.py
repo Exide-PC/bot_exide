@@ -4,6 +4,7 @@ from player import Player
 import asyncio
 import discord
 import logging
+from messageFormatter import MessageType
 
 class PlayerExtension(DiscordExtension):
     def __init__(self, player):
@@ -61,9 +62,7 @@ class PlayerExtension(DiscordExtension):
                     break
                 queue += f'\n{i + 1}. {items[i].title}'
 
-            embed = discord.Embed()
-            embed.description = queue
-            await ctx.send_message(queue, embed=embed)
+            await ctx.send_message(queue, MessageType.Embed)
 
     def list_commands(self, ctx: ExecutionContext):
         return ['join', 'disc', 'skip', 'stop', 'repeat', 'queue']

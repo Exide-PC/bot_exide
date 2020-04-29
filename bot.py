@@ -18,6 +18,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 from models.DiscordExtension import DiscordExtension
 from models.ExecutionContext import ExecutionContext
 from models.ExecutionException import ExecutionException
+from messageFormatter import MessageFormatter, MessageType
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -25,6 +26,7 @@ bot = commands.Bot(command_prefix = '')
 _executors = None
 _configRepo = None
 _strictMode = False
+_formatter = MessageFormatter()
 
 async def choice(options: [], user_id, send_message):
     choice_hint = ""
@@ -115,10 +117,10 @@ async def on_message(message):
     cmd = final_message.split(' ')[0].lower()
     args = final_message[len(cmd) + 1:].strip()
 
-    async def send_message(msg: str = None, embed: discord.Embed = None):
-        msg = msg and f'**{msg}**'
-        logging.info(f'Sending message "{msg}" {"(with embed)" if embed else ""}')
-        return await message.channel.send(content=msg, embed=embed)
+    async def send_message(payload, messageType: MessageType = MessageType.Common):
+        (content, embed) = _formatter.format(payload, messageType)
+        logging.info(f'Sending message "{payload}"')
+        return await message.channel.send(content, embed)
 
     async def choice_callback(options: []):
         return await choice(options, author.id, send_message)
@@ -161,9 +163,7 @@ async def on_message(message):
             for command in executor.list_commands(context):
                 text += f'- {command}\n'
             text += '\n'
-        embed = discord.Embed()
-        embed.description = text
-        await context.send_message(None, embed)
+        await context.send_message(text, MessageType.Embed)
         return
     
     elif (context.cmd == 'reboot'):

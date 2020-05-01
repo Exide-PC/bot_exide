@@ -169,6 +169,7 @@ async def on_message(message):
     elif (context.cmd == 'reboot'):
         if (context.isadmin):
             logging.info(f'{context.author.display_name} invoked reboot')
+            os.system('youtube-dl --rm-cache-dir')
             os.system('git pull')
             os.system('start startup.py')
             sys.exit()

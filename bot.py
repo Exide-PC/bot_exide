@@ -199,6 +199,7 @@ async def on_message(message):
             logging.error(f'Error occured during message processing: {e}')
         except Exception as e:
             logging.error(f'Unknown error occured during "{context.msg}" message processing. {e}')
+            await context.send_message('Unknown error occured. Contact <@!286920219912306688>')
         
 @bot.event
 async def on_ready():

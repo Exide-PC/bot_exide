@@ -202,8 +202,10 @@ async def on_message(message):
         
 @bot.event
 async def on_ready():
+    logging.info('Initializing extensions...')
     for executor in _executors:
         await executor.initialize(bot)
+    logging.info('Finished extensions initialization')
 
     logging.info(f'{bot.user} has connected')
 

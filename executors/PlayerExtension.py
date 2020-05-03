@@ -28,7 +28,7 @@ class PlayerExtension(DiscordExtension):
         elif (ctx.cmd == 'disc'):
             await player.disconnect()
 
-        elif (ctx.cmd == 'skip'):
+        elif (ctx.cmd in ['skip', 'next']):
             if (ctx.msg == 'skip'):
                 player.skip()
             else:
@@ -65,7 +65,7 @@ class PlayerExtension(DiscordExtension):
             await ctx.send_message(queue, MessageType.Embed)
 
     def list_commands(self, ctx: ExecutionContext):
-        return ['join', 'disc', 'skip', 'stop', 'repeat', 'queue']
+        return ['join', 'disc', 'skip / next', 'stop', 'repeat', 'queue']
 
     async def initialize(self, bot):
         player = self.player

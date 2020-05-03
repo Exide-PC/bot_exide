@@ -57,6 +57,7 @@ async def choice(options: [], user_id, send_message):
 
 def find_replacer(msg):
     while(True):
+        msg = msg.strip()
         replacer = None
         for alias in _configRepo.config['aliases']:
             if (alias[0].lower() == msg.lower()):
@@ -107,7 +108,7 @@ async def on_message(message):
         message.channel.name != 'bot-exide' or
         message.author == bot.user): return
 
-    final_message = find_replacer(message.content).strip()
+    final_message = find_replacer(message.content)
 
     # we also need the 'voice' property which is not being
     # passed in case the message was received via PM

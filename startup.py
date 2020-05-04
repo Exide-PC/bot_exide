@@ -14,6 +14,7 @@ from executors.PlayerExtension import PlayerExtension
 from executors.GachiExtension import GachiExtension
 from executors.YoutubeExtension import YoutubeExtension
 from executors.AliasExtension import AliasExtension
+from executors.BotExideExtension import BotExideExtension
 from repositories.configRepository import ConfigRepository
 
 def set_logger():
@@ -85,7 +86,8 @@ executors = [
     PlayerExtension(player),
     YoutubeExtension(youtube),
     GachiExtension(gachi),
-    AliasExtension(configRepo)
+    AliasExtension(configRepo),
+    BotExideExtension()
 ]
 
 bot = BotExide(executors, configRepo)

@@ -7,17 +7,16 @@ import os
 import sys
 import logging
 
-class YoutubeExtension(DiscordExtension):
-    def __init__(self, youtube_service):
+class BotExideExtension(DiscordExtension):
+    def __init__(self):
         super().__init__()
-        self.service = youtube_service
 
     @property
     def name(self):
-        return 'Youtube commands'
+        return 'Common bot commands'
 
     def isserving(self, ctx: ExecutionContext):
-        return ctx.cmd in ['play', 'search']
+        return ctx.cmd in ['strict', 'reboot']
 
     async def execute(self, ctx: ExecutionContext):
         cmd = ctx.cmd

@@ -5,6 +5,7 @@ import bot
 import youtube
 import json
 import logging
+from bot import BotExide
 from dotenv import load_dotenv
 from player import Player
 from gachi_service import GachiService
@@ -87,4 +88,5 @@ executors = [
     AliasExtension(configRepo)
 ]
 
-bot.start(discord_token, executors, configRepo)
+bot = BotExide(executors, configRepo)
+bot.run(discord_token)

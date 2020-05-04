@@ -24,15 +24,24 @@ from utils.execute_blocking import execute_blocking
 # https://discordpy.readthedocs.io/en/latest/api.html
 
 class BotExide(discord.Client):
+
     _executors = None
-    _configRepo = None
     _strictMode = False
+    _configRepo = None
     _formatter = MessageFormatter()
 
     def __init__(self, executors, configRepo, loop=None, **options):
         self._executors = executors
         self._configRepo = configRepo
         super().__init__(loop=loop, **options)
+
+    @property
+    def strictMode(self):
+        return self._strictMode
+
+    @strictMode.setter
+    def strictMode(self, value):
+        self._strictMode = value
 
     async def choice(self, options: [], user_id, send_message):
         choice_hint = ""
@@ -159,29 +168,11 @@ class BotExide(discord.Client):
                 text += '\n'
             await context.send_message(text, MessageType.Embed)
             return
-        
-        elif (context.cmd == 'reboot'):
-            if (context.isadmin):
-                logging.info(f'{context.author.display_name} invoked reboot')
-                os.system('youtube-dl --rm-cache-dir')
-                os.system('git pull')
-                os.system('start startup.py')
-                sys.exit()
-            else:
-                logging.info(f'Unathorized reboot attempt from {context.author.display_name}, kicking...')
-                await context.send_message('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
-                await asyncio.sleep(2)
-                await context.author.move_to(None)
-
-        elif (context.cmd == 'strict'):
-            if (context.isadmin):
-                self._strictMode = not self._strictMode
-                await context.send_message(f'Strict mode: {"On" if self._strictMode else "Off"}')
 
         for executor in self._executors:
             if (not executor.isserving(context)):
                 continue
-            if (self._strictMode and not context.isadmin):
+            if (self.strictMode and not context.isadmin):
                 await context.send_message('Bot is in strict mode. Only admins can run commands')
                 return
             logging.info(f'{author.display_name} is executing command "{message.content}"')

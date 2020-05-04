@@ -1,0 +1,50 @@
+from models.DiscordExtension import DiscordExtension
+from models.ExecutionContext import ExecutionContext
+from player import Player
+import asyncio
+import discord
+import os
+import sys
+import logging
+
+class YoutubeExtension(DiscordExtension):
+    def __init__(self, youtube_service):
+        super().__init__()
+        self.service = youtube_service
+
+    @property
+    def name(self):
+        return 'Youtube commands'
+
+    def isserving(self, ctx: ExecutionContext):
+        return ctx.cmd in ['play', 'search']
+
+    async def execute(self, ctx: ExecutionContext):
+        cmd = ctx.cmd
+
+        if (cmd == 'reboot'):
+            if (ctx.isadmin):
+                logging.info(f'{ctx.author.display_name} invoked reboot')
+                os.system('youtube-dl --rm-cache-dir')
+                os.system('git pull')
+                os.system('start startup.py')
+                sys.exit()
+            else:
+                logging.info(f'Unathorized reboot attempt from {ctx.author.display_name}, kicking...')
+                await ctx.send_message('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
+                await asyncio.sleep(2)
+                await ctx.author.move_to(None)
+
+        elif (cmd == 'strict'):
+            if (ctx.isadmin):
+                self.bot.strictMode = not self.bot.strictMode
+                await ctx.send_message(f'Strict mode: {"On" if self.bot.strictMode else "Off"}')
+
+    def list_commands(self, ctx: ExecutionContext):
+        return [
+            'reboot',
+            'strict'
+        ]
+
+    async def initialize(self, bot):
+        self.bot = bot

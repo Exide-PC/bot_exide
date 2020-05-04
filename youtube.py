@@ -10,6 +10,7 @@ import html
 import logging
 from models.ExecutionException import ExecutionException
 import asyncio
+from utils.execute_blocking import execute_blocking
 
 load_dotenv()
 token = os.getenv('GOOGLE_TOKEN')
@@ -120,7 +121,7 @@ class YoutubeService:
 
             while (attempt_counter < 3):
                 try:
-                    file_path = await ctx.execute_blocking(download)
+                    file_path = await execute_blocking(download)
                     if (file_path):
                         break
                 except ValueError:

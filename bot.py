@@ -19,7 +19,6 @@ from models.DiscordExtension import DiscordExtension
 from models.ExecutionContext import ExecutionContext
 from models.ExecutionException import ExecutionException
 from messageFormatter import MessageFormatter, MessageType
-from utils.execute_blocking import execute_blocking
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -154,7 +153,6 @@ class BotExide(discord.Client):
             send_message,
             choice_callback,
             loading_callback,
-            execute_blocking,
             author.id in self._configRepo.config['admins']
         )
 

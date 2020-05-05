@@ -29,7 +29,7 @@ class PlayerExtension(DiscordExtension):
             await player.disconnect()
 
         elif (ctx.cmd in ['skip', 'next']):
-            if (ctx.msg == 'skip'):
+            if (ctx.cmd == 'next' or ctx.msg == 'skip'):
                 player.skip()
             else:
                 index = ctx.msg[len('skip'):].strip()

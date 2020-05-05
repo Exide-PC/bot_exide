@@ -8,9 +8,17 @@ import logging
 import uuid
 
 class Item:
-    def __init__(self, path_callback, title):
+    def __init__(self, path_callback, short_title, context, payload=None, message_type=None):
+        # base
         self.path_callback = path_callback
-        self.title = title
+        self.short_title = short_title
+        self.context = context
+        # rich
+        self.payload = payload
+        self.message_type = message_type
+
+    def is_formatted(self):
+        return self.payload and self.message_type
 
 class Voice:
     def __init__(self):
@@ -56,7 +64,7 @@ class Voice:
             if (self._get_client().is_connected()):
                 await self._get_client().move_to(voice_channel)
             else:
-                logging.warning('Not connected voice client encountered, something bad is going to happen...')
+                logging.error('Not connected voice client encountered, should never get here!')
                 self.stop_event.set()
                 await self._get_client().move_to(voice_channel)
                 await self.disconnect()
@@ -99,16 +107,21 @@ class Player(Voice):
         while (True):
             try:
                 while (self.is_queue_mode and (len(self.queue) > 0)):
-                    while (self.bot.ws.closed):
-                        await asyncio.sleep(1)
 
-                    self.current_item = self.queue.pop(0)
-                    logging.info(f'Dequeued item {self.current_item.title} ({short_id})')
+                    item = self.queue.pop(0)
+                    self.current_item = item
+                    logging.info(f'Dequeued item {item.short_title} ({short_id})')
 
-                    file_path = await self.get_path(self.current_item)
-                    logging.info(f'Received file path: {file_path if file_path != None else "None"} ({short_id})')
+                    await self.ensure_connection()
+                    file_path = await self.get_path(item)
+
+                    logging.info(f'Received file path: {file_path} ({short_id})')
                     if (file_path == None):
                         continue
+
+                    await self.ensure_connection()
+                    await self.join_channel(item.context.author_vc)
+                    await self.notify_playing(item)
 
                     # post-condition loop to play music at least one
                     while (True):
@@ -120,6 +133,7 @@ class Player(Voice):
             finally:
                 self.current_item = None
                 await asyncio.sleep(1)
+                await self.ensure_connection()
                 counter += 1
                 if (counter % 1200 == 0):
                     logging.debug(f'Loop guid: {short_id}')
@@ -131,17 +145,37 @@ class Player(Voice):
             try:
                 return await item.path_callback()
             except Exception as e:
-                delay = i * 3
+                delay = i * 3 + 1
                 if (i != attempt_limit - 1):
-                    logging.error(f'Retrying to load item {item.title} in {delay} seconds...')
+                    logging.warning(f'Retrying to load item {item.short_title} in {delay} second(s)...')
                     await asyncio.sleep(delay)
                 else:
                     logging.error(e)
-                    logging.error(f'Could not load item {item.title} after {i + 1} retries')
+                    logging.error(f'Could not load item {item.short_title} after {i + 1} retries')
                     return None
 
-    def enqueue(self, path_callback, title):
-        item = Item(path_callback, title)
+    async def ensure_connection(self):
+        # waiting for connection establishment
+        while (
+            self.bot.ws.closed or (
+                self.is_connected() and
+                not self._get_client().is_connected()
+            )
+        ):
+            await asyncio.sleep(1)
+
+    async def notify_playing(self, item: Item):
+        if (item.is_formatted()):
+            await item.context.send_message(item.payload, item.message_type)
+        else:
+            await item.context.send_message(f'Now playing: {item.short_title}')
+
+    def enqueue(self, path_callback, short_title, ctx):
+        item = Item(path_callback, short_title, ctx)
+        self.queue.append(item)
+
+    def enqueue_rich(self, path_callback, short_title, ctx, payload, message_type):
+        item = Item(path_callback, short_title, ctx, payload, message_type)
         self.queue.append(item)
 
     def skip(self):

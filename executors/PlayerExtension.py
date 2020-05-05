@@ -54,13 +54,13 @@ class PlayerExtension(DiscordExtension):
             if (player.current_item == None):
                 queue = 'Nothing is being played currently\n'
             else:
-                queue = f'Currently playing: {player.current_item.title}\n'
+                queue = f'Currently playing: {player.current_item.short_title}\n'
 
             for i in range(len(items)):
                 if (len(queue) > 1000):
                     queue += f'\n... {len(items) - i + 1} more'
                     break
-                queue += f'\n{i + 1}. {items[i].title}'
+                queue += f'\n{i + 1}. {items[i].short_title}'
 
             await ctx.send_message(queue, MessageType.Embed)
 

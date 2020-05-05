@@ -26,10 +26,9 @@ class GachiService:
         title = gachi["title"]
 
         async def item_callback():
-            await self._player.join_channel(ctx.author_vc)
-            await ctx.send_message(f'Now playing: {title}')
             return youtube.download_sound(video_id)
-        self._player.enqueue(item_callback, title)
+
+        self._player.enqueue(item_callback, title, ctx)
 
         if (self._player.is_playing()):
             await ctx.send_message(f'{title} was added to queue')

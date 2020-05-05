@@ -137,11 +137,9 @@ class YoutubeService:
                 await ctx.send_message(f'Download failed after {attempt_counter} retries :c')
                 return
             
-            await ctx.send_message(f'Now playing: {title}')
-            await self._player.join_channel(ctx.author_vc)
             return file_path
 
-        self._player.enqueue(item_callback, title)
+        self._player.enqueue(item_callback, title, ctx)
 
 
 def playlist_items(listId: str) -> []:

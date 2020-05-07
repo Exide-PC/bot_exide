@@ -22,6 +22,8 @@ from messageFormatter import MessageFormatter, MessageType
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
+is_production = os.getenv('MODE') == 'PRODUCTION'
+
 class BotExide(discord.Client):
 
     _executors = None
@@ -189,3 +191,8 @@ class BotExide(discord.Client):
             await executor.initialize(self)
         logging.info('Finished extensions initialization')
         logging.info(f'{self.user} has connected')
+
+        if (is_production):
+            channel = next((c for c in self.guilds[0].channels if c.name == 'bot-exide'), None)
+            (content, embed) = self._formatter.format('Bot connected', MessageType.Italic)
+            await channel.send(content=content, embed=embed)

@@ -19,6 +19,7 @@ from models.DiscordExtension import DiscordExtension
 from models.ExecutionContext import ExecutionContext
 from models.ExecutionException import ExecutionException
 from messageFormatter import MessageFormatter, MessageType
+from utils.linq import first
 
 # https://discordpy.readthedocs.io/en/latest/api.html
 
@@ -30,6 +31,7 @@ class BotExide(discord.Client):
     _strictMode = False
     _configRepo = None
     _formatter = MessageFormatter()
+    _notify_connected = is_production
 
     def __init__(self, executors, configRepo, loop=None, **options):
         self._executors = executors
@@ -192,7 +194,8 @@ class BotExide(discord.Client):
         logging.info('Finished extensions initialization')
         logging.info(f'{self.user} has connected')
 
-        if (is_production):
-            channel = next((c for c in self.guilds[0].channels if c.name == 'bot-exide'), None)
+        if (self._notify_connected):
+            self._notify_connected = False
+            channel = first(self.guilds[0].channels, lambda c: c.name == 'bot-exide')
             (content, embed) = self._formatter.format('Bot connected', MessageType.Italic)
             await channel.send(content=content, embed=embed)

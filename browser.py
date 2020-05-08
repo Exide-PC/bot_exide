@@ -65,7 +65,7 @@ class Browser:
         self.__wait_by_id('audio_search')
         self._vk_music_url = driver.current_url
 
-        self.disable_stuff()
+        self.__open_audio()
 
     def wait_for_download_and_rename(self):
         driver = self.driver
@@ -90,6 +90,7 @@ class Browser:
         while (self._busy):
             time.sleep(0.1)
         self._busy = True
+        self.__open_audio()
 
         driver = self.driver
         search = driver.find_element_by_id('audio_search')
@@ -136,6 +137,10 @@ class Browser:
 
     def quit(self):
         self.driver.quit()
+
+    def __open_audio(self):
+        self.driver.get(self._vk_music_url)
+        self.disable_stuff()
 
     def __wait(self): return WebDriverWait(self.driver, 60, 0.1)
     def __wait_by_selector(self, selector): return self.__wait().until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))

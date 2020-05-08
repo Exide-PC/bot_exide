@@ -27,14 +27,14 @@ is_production = os.getenv('MODE') == 'PRODUCTION'
 
 class BotExide(discord.Client):
 
-    _executors = None
+    _extensions = None
     _strictMode = False
     _configRepo = None
     _formatter = MessageFormatter()
     _notify_connected = is_production
 
-    def __init__(self, executors, configRepo, loop=None, **options):
-        self._executors = executors
+    def __init__(self, extensions, configRepo, loop=None, **options):
+        self._extensions = extensions
         self._configRepo = configRepo
         super().__init__(loop=loop, **options)
 
@@ -47,12 +47,16 @@ class BotExide(discord.Client):
         self._strictMode = value
 
     async def choice(self, options: [], user_id, send_message):
-        choice_hint = ""
+        options_content = ""
         for i in range(len(options)):
-            choice_hint += f'{i + 1}. {options[i]}'
-            choice_hint += '\n' if i != len(options) - 1 else ''
+            content_preview = options_content + f'{i + 1}. {options[i]}'
+            content_preview += '\n' if i != len(options) - 1 else ''
+            if (len(content_preview) >= 1900): # 2000 max, but remaining some chars for service stuff
+                logging.info('Choice options take more than 2000 chars, truncating...')
+                break
+            options_content = content_preview
 
-        await send_message(choice_hint)
+        await send_message(options_content)
         result = None
 
         def check(m):
@@ -162,8 +166,8 @@ class BotExide(discord.Client):
 
         if (context.cmd == 'help'):
             text = ''
-            for i in range(len(self._executors)):
-                executor = self._executors[i]
+            for i in range(len(self._extensions)):
+                executor = self._extensions[i]
                 text += f'{i + 1}. {executor.name}\n'
                 for command in executor.list_commands(context):
                     text += f'- {command}\n'
@@ -171,7 +175,7 @@ class BotExide(discord.Client):
             await context.send_message(text, MessageType.Embed)
             return
 
-        for executor in self._executors:
+        for executor in self._extensions:
             if (not executor.isserving(context)):
                 continue
             if (self.strictMode and not context.isadmin):
@@ -189,7 +193,7 @@ class BotExide(discord.Client):
             
     async def on_ready(self):
         logging.info('Initializing extensions...')
-        for executor in self._executors:
+        for executor in self._extensions:
             await executor.initialize(self)
         logging.info('Finished extensions initialization')
         logging.info(f'{self.user} has connected')

@@ -8,7 +8,8 @@ import sys
 import logging
 
 class BotExideExtension(DiscordExtension):
-    def __init__(self):
+    def __init__(self, reboot_handler):
+        self._reboot_handler = reboot_handler
         super().__init__()
 
     @property
@@ -24,10 +25,7 @@ class BotExideExtension(DiscordExtension):
         if (cmd == 'reboot'):
             if (ctx.isadmin):
                 logging.info(f'{ctx.author.display_name} invoked reboot')
-                os.system('youtube-dl --rm-cache-dir')
-                os.system('git pull')
-                os.system('start startup.py')
-                sys.exit()
+                self._reboot_handler()
             else:
                 logging.info(f'Unathorized reboot attempt from {ctx.author.display_name}, kicking...')
                 await ctx.send_message('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')

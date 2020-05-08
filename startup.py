@@ -15,7 +15,9 @@ from executors.GachiExtension import GachiExtension
 from executors.YoutubeExtension import YoutubeExtension
 from executors.AliasExtension import AliasExtension
 from executors.BotExideExtension import BotExideExtension
+from executors.BrowserExtension import BrowserExtension
 from repositories.configRepository import ConfigRepository
+from browser import Browser
 
 def set_logger():
     class LogFilter(logging.Filter):
@@ -81,14 +83,23 @@ configRepo = ConfigRepository(cfg, update_cfg)
 player = Player()
 gachi = GachiService(player, configRepo)
 youtube = YoutubeService(player, configRepo)
+browser = Browser()
 
-executors = [
-    PlayerExtension(player),
-    YoutubeExtension(youtube),
-    GachiExtension(gachi),
-    AliasExtension(configRepo),
-    BotExideExtension()
+def reboot_handler():
+    browser.quit()
+    os.system('youtube-dl --rm-cache-dir')
+    os.system('git pull')
+    os.system('start startup.py')
+    sys.exit()
+
+extensions = [
+    # PlayerExtension(player),
+    # YoutubeExtension(youtube),
+    # GachiExtension(gachi),
+    # AliasExtension(configRepo),
+    BotExideExtension(reboot_handler),
+    BrowserExtension(browser)
 ]
 
-bot = BotExide(executors, configRepo)
+bot = BotExide(extensions, configRepo)
 bot.run(discord_token)

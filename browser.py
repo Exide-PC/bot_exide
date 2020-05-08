@@ -10,6 +10,9 @@ from selenium.webdriver.chrome.options import Options
 import shutil
 import os
 from selenium.webdriver.common.action_chains import ActionChains
+from bs4 import BeautifulSoup
+from lxml import html
+from os import path
 
 # https://chromedriver.chromium.org/downloads
 # https://selenium-python.readthedocs.io/locating-elements.html
@@ -17,8 +20,14 @@ from selenium.webdriver.common.action_chains import ActionChains
 login = os.getenv('VK_LOGIN')
 password = os.getenv('VK_PASSWORD')
 
-class SearchResultProvider:
-    def __init__(self, results, download, reset):
+class MusicEntry:
+    def __init__(self, title, author, duration):
+        self.title = title
+        self.author = author
+        self.duration = duration
+
+class SearchResultHandle:
+    def __init__(self, results: [], download, reset):
         self.results = results
         self.download = download
         self.reset = reset
@@ -30,6 +39,7 @@ class Browser:
     
     _busy = False
     _download_count = 0
+    _vk_music_url = None
 
     @property
     def isbusy(self):
@@ -52,13 +62,12 @@ class Browser:
         driver.find_element_by_id('index_pass').send_keys(password)
         driver.find_element_by_id('index_login_button').click()
         self.__wait_by_id('l_aud').click()
+        self.__wait_by_id('audio_search')
+        self._vk_music_url = driver.current_url
 
-        driver.execute_script("""
-            document.getElementById('chat_onl_wrap').style.pointerEvents = 'none';
-            document.getElementById('page_header_cont').style.pointerEvents = 'none';
-        """)
+        self.disable_stuff()
 
-    def wait_for_download_and_rename(self, newFilename):
+    def wait_for_download_and_rename(self):
         driver = self.driver
         driver.switch_to.window(driver.window_handles[self.DOWNLOAD_TAB])
 
@@ -74,57 +83,56 @@ class Browser:
 
         file_path = WebDriverWait(driver, 60).until(chrome_downloads)
         self._download_count += 1
-
-        newPath = os.path.join(os.getcwd(), 'downloads', newFilename)
-        shutil.move(file_path, newPath)
         driver.switch_to.window(driver.window_handles[self.VK_TAB])
-        return newPath
+        return file_path
 
     def search(self, query: str):
         while (self._busy):
             time.sleep(0.1)
         self._busy = True
 
-        search = self.__wait_by_id('audio_search')
-
-        search.send_keys(Keys.CONTROL + "a")
-        search.send_keys(Keys.DELETE)
+        driver = self.driver
+        search = driver.find_element_by_id('audio_search')
 
         search.send_keys(query)
         search.send_keys(Keys.ENTER)
 
-        self.__wait_by_className('ui_search_reset_button')
-        self.__wait_by_selector('div[data-audio-context="search_global_audios"]')
+        result_container_selector = 'div[data-audio-context="search_global_audios"] > div'
+        self.__wait_by_selector(result_container_selector)
 
-        result_containers = self.driver.find_elements_by_css_selector('div[data-audio-context="search_global_audios"] > div')
-        results = list(map( # FIXME Takes too long, use parser instead
-            lambda c: ({
-                'title': c.find_element_by_class_name('audio_row__title').text,
-                'author': c.find_element_by_class_name('audio_row__performers').text,
-                'duration': c.find_element_by_class_name('audio_row__duration').text,
-                'download': c.find_element_by_class_name('downloadButton')
-            }), result_containers
-        ))
+        html = driver.page_source
+        results = self.parse_music_results(html)
 
         def reset():
+            driver.get(self._vk_music_url)
+            self.disable_stuff()
             self._busy = False
 
         def download(index):
-            result = results[index]
-            result['download'].click()
+            result_containers = driver.find_elements_by_css_selector(result_container_selector)
+            download_button = result_containers[index].find_element_by_class_name('downloadButton')
+            download_button.click()
 
-            name = f"{result['author']} - {result['title']}.mp3"
-            path = self.wait_for_download_and_rename(name)
+            path = self.wait_for_download_and_rename()
             reset()
             return path
-
-        result_models = list(map(lambda result: ({
-            'title': result['title'],
-            'author': result['author'],
-            'duration': result['duration']
-        }), results))
         
-        return SearchResultProvider(result_models, download, reset)
+        return SearchResultHandle(results, download, reset)
+
+    def parse_music_results(self, html):
+        soup = BeautifulSoup(html, features="lxml")
+        result_containers = soup.select('div[data-audio-context="search_global_audios"] > div')
+        return list(map(lambda rc: MusicEntry(
+            rc.select_one('.audio_row__title_inner').text,
+            rc.select_one('.audio_row__performers').text,
+            rc.select_one('.audio_row__duration').text
+        ), result_containers))
+
+    def disable_stuff(self):
+        self.driver.execute_script("""
+            document.getElementById('chat_onl_wrap').style.pointerEvents = 'none';
+            document.getElementById('page_header_cont').style.pointerEvents = 'none';
+        """)
 
     def quit(self):
         self.driver.quit()

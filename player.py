@@ -181,6 +181,11 @@ class Player(Voice):
         item = Item(path_callback, short_title, ctx)
         self.queue.append(item)
 
+    def enqueue_with_path(self, path, short_title, ctx):
+        async def path_wrapper():
+            return path
+        self.enqueue(path_wrapper, short_title, ctx)
+
     def enqueue_rich(self, path_callback, short_title, ctx, payload, message_type):
         item = Item(path_callback, short_title, ctx, payload, message_type)
         self.queue.append(item)

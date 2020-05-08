@@ -17,6 +17,7 @@ from executors.AliasExtension import AliasExtension
 from executors.BotExideExtension import BotExideExtension
 from executors.BrowserExtension import BrowserExtension
 from repositories.configRepository import ConfigRepository
+from repositories.vkCacheRepository import VkCacheRepository
 from browser import Browser
 
 def set_logger():
@@ -83,6 +84,7 @@ configRepo = ConfigRepository(cfg, update_cfg)
 player = Player()
 gachi = GachiService(player, configRepo)
 youtube = YoutubeService(player, configRepo)
+vkCacheRepo = VkCacheRepository()
 browser = Browser()
 
 def reboot_handler():
@@ -93,12 +95,12 @@ def reboot_handler():
     sys.exit()
 
 extensions = [
-    # PlayerExtension(player),
-    # YoutubeExtension(youtube),
-    # GachiExtension(gachi),
-    # AliasExtension(configRepo),
+    PlayerExtension(player),
+    YoutubeExtension(youtube),
+    GachiExtension(gachi),
+    AliasExtension(configRepo),
     BotExideExtension(reboot_handler),
-    BrowserExtension(browser)
+    BrowserExtension(browser, player, vkCacheRepo)
 ]
 
 bot = BotExide(extensions, configRepo)

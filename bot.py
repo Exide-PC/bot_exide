@@ -140,11 +140,14 @@ class BotExide(discord.Client):
                 await asyncio.sleep(2)
                 if (stop_event.is_set()): return
 
-                status_message = await send_message(message)
+                messageType = MessageType.Italic
+                status_message = await send_message(message, messageType)
+
                 counter = 0
                 while (not stop_event.is_set()):
                     dots = counter % 3 + 1
-                    await status_message.edit(content=f'{message}{"." * dots}')
+                    (content, embed) = self._formatter.format(f'{message}{"." * dots}', messageType)
+                    await status_message.edit(content=content, embed=embed)
                     await asyncio.sleep(1)
                     counter += 1
                 await status_message.delete()

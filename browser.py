@@ -58,8 +58,8 @@ class Browser:
         driver.find_element_by_id('index_email').send_keys(login)
         driver.find_element_by_id('index_pass').send_keys(password)
         driver.find_element_by_id('index_login_button').click()
-        self.__wait_by_id('l_aud').click()
-        self.__wait_by_id('audio_search')
+        self.__wait_one_by_id('l_aud').click()
+        self.__wait_one_by_id('audio_search')
         self._vk_music_url = driver.current_url
 
         self.__open_audio()
@@ -95,6 +95,7 @@ class Browser:
         search.send_keys(query)
         search.send_keys(Keys.ENTER)
 
+        result_containers = None
         try:
             result_containers = self.__wait_by_selector('div[data-audio-context="search_global_audios"] > div', 7)
         except TimeoutException:
@@ -139,7 +140,11 @@ class Browser:
         self.disable_stuff()
 
     def __wait(self, timeout): return WebDriverWait(self.driver, timeout, 0.1)
-    def __wait_by_selector(self, selector, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
-    def __wait_by_xpath(self, xpath, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.XPATH, xpath)))
-    def __wait_by_id(self, id, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.ID, id)))
-    def __wait_by_className(self, className, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.CLASS_NAME, className)))
+    def __wait_one_by_selector(self, selector, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+    def __wait_by_selector(self, selector, timeout=60): return self.__wait(timeout).until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, selector)))
+    def __wait_one_by_xpath(self, xpath, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.XPATH, xpath)))
+    def __wait_by_xpath(self, xpath, timeout=60): return self.__wait(timeout).until(EC.visibility_of_all_elements_located((By.XPATH, xpath)))
+    def __wait_one_by_id(self, id, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.ID, id)))
+    def __wait_by_id(self, id, timeout=60): return self.__wait(timeout).until(EC.visibility_of_all_elements_located((By.ID, id)))
+    def __wait_one_by_className(self, className, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.CLASS_NAME, className)))
+    def __wait_by_className(self, className, timeout=60): return self.__wait(timeout).until(EC.visibility_of_all_elements_located((By.CLASS_NAME, className)))

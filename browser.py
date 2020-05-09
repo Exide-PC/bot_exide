@@ -106,6 +106,7 @@ class Browser:
 
         def download(index):
             download_button = result_containers[index].find_element_by_class_name('downloadButton')
+            download_button.location_once_scrolled_into_view
             download_button.click()
 
             path = self.wait_for_download_and_rename()

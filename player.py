@@ -6,13 +6,14 @@ from threading import Thread
 from discord.player import PCMVolumeTransformer
 import logging
 import uuid
+from models.ExecutionContext import ExecutionContext
 
 class Item:
     def __init__(self, path_callback, short_title, context, payload=None, message_type=None):
         # base
         self.path_callback = path_callback
         self.short_title = short_title
-        self.context = context
+        self.context: ExecutionContext = context
         # rich
         self.payload = payload
         self.message_type = message_type
@@ -108,9 +109,12 @@ class Player(Voice):
             try:
                 while (self.is_queue_mode and (len(self.queue) > 0)):
 
-                    item = self.queue.pop(0)
+                    item: Item = self.queue.pop(0)
                     self.current_item = item
                     logging.info(f'Dequeued item {item.short_title} ({short_id})')
+
+                    if (not item.context.author_vc):
+                        continue
 
                     await self.ensure_connection()
                     file_path = await self.get_path(item)

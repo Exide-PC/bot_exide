@@ -105,8 +105,6 @@ class Browser:
         results = self.parse_music_results(html)
 
         def reset():
-            driver.get(self._vk_music_url)
-            self.disable_stuff()
             self._busy = False
 
         def download(index):

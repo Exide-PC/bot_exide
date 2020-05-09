@@ -15,6 +15,7 @@ from lxml import html
 from os import path
 from utils.env import env
 from models.MusicEntry import MusicEntry
+from selenium.common.exceptions import TimeoutException
 
 # https://chromedriver.chromium.org/downloads
 # https://selenium-python.readthedocs.io/locating-elements.html
@@ -94,25 +95,26 @@ class Browser:
         search.send_keys(query)
         search.send_keys(Keys.ENTER)
 
-        result_container_selector = 'div[data-audio-context="search_global_audios"] > div'
-        self.__wait_by_selector(result_container_selector)
+        try:
+            result_containers = self.__wait_by_selector('div[data-audio-context="search_global_audios"] > div', 7)
+        except TimeoutException:
+            return SearchResultHandle([], None, self.__reset)
 
         html = driver.page_source
         results = self.parse_music_results(html)
 
-        def reset():
-            self._busy = False
-
         def download(index):
-            result_containers = driver.find_elements_by_css_selector(result_container_selector)
             download_button = result_containers[index].find_element_by_class_name('downloadButton')
             download_button.click()
 
             path = self.wait_for_download_and_rename()
-            reset()
+            self.__reset()
             return path
         
-        return SearchResultHandle(results, download, reset)
+        return SearchResultHandle(results, download, self.__reset)
+
+    def __reset(self):
+        self._busy = False
 
     def parse_music_results(self, html):
         soup = BeautifulSoup(html, features="lxml")
@@ -136,8 +138,8 @@ class Browser:
         self.driver.get(self._vk_music_url)
         self.disable_stuff()
 
-    def __wait(self): return WebDriverWait(self.driver, 60, 0.1)
-    def __wait_by_selector(self, selector): return self.__wait().until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
-    def __wait_by_xpath(self, xpath): return self.__wait().until(EC.visibility_of_element_located((By.XPATH, xpath)))
-    def __wait_by_id(self, id): return self.__wait().until(EC.visibility_of_element_located((By.ID, id)))
-    def __wait_by_className(self, className): return self.__wait().until(EC.visibility_of_element_located((By.CLASS_NAME, className)))
+    def __wait(self, timeout): return WebDriverWait(self.driver, timeout, 0.1)
+    def __wait_by_selector(self, selector, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+    def __wait_by_xpath(self, xpath, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.XPATH, xpath)))
+    def __wait_by_id(self, id, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.ID, id)))
+    def __wait_by_className(self, className, timeout=60): return self.__wait(timeout).until(EC.visibility_of_element_located((By.CLASS_NAME, className)))

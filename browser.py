@@ -4,28 +4,23 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 import time
 import json
-from selenium.webdriver.chrome.options import Options
 import shutil
 import os
-from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 from lxml import html
 from os import path
 from utils.env import env
+from models.MusicEntry import MusicEntry
 
 # https://chromedriver.chromium.org/downloads
 # https://selenium-python.readthedocs.io/locating-elements.html
 
 login = env.vk_login
 password = env.vk_password
-
-class MusicEntry:
-    def __init__(self, title, author, duration):
-        self.title = title
-        self.author = author
-        self.duration = duration
 
 class SearchResultHandle:
     def __init__(self, results: [], download, reset):

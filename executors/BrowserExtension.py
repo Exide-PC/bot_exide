@@ -9,6 +9,7 @@ import sys
 import logging
 from utils.execute_blocking import execute_blocking
 from repositories.vkCacheRepository import VkCacheRepository
+from models.MusicEntry import MusicEntry
 
 class BrowserExtension(DiscordExtension):
     
@@ -53,7 +54,7 @@ class BrowserExtension(DiscordExtension):
                     result: MusicEntry = handle.results[index]
                     title = f'{result.author} - {result.title}'
 
-                    cached_path = self._vkCacheRepository.try_get(result.author, result.title, result.duration)
+                    cached_path = self._vkCacheRepository.try_get(result)
                     if (not cached_path):
                         logging.info(f'No cache for vm music {title} was not found, downloading...')
                         loaded_event = asyncio.Event()
@@ -62,7 +63,7 @@ class BrowserExtension(DiscordExtension):
                         actual_path = await execute_blocking(handle.download, index)
                         loaded_event.set()
 
-                        cached_path = self._vkCacheRepository.cache(actual_path, result.author, result.title, result.duration)
+                        cached_path = self._vkCacheRepository.cache(actual_path, result)
 
                     if (self._player.is_playing()):
                         await ctx.send_message('Your music was added to queue')

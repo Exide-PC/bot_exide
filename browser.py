@@ -129,8 +129,8 @@ class Browser:
 
     def disable_stuff(self):
         self.driver.execute_script("""
+            document.getElementById('page_header_cont').style.display = 'none';
             document.getElementById('chat_onl_wrap').style.pointerEvents = 'none';
-            document.getElementById('page_header_cont').style.pointerEvents = 'none';
         """)
 
     def quit(self):

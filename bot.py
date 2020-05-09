@@ -60,6 +60,7 @@ class BotExide(discord.Client):
 
         def check(m):
             if (m.author.id != user_id): return False
+            if (m.content == 'cancel'): return True
             try:
                 i = int(m.content) - 1
                 if (i < 0 or i >= len(options)): return False

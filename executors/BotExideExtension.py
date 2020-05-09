@@ -40,7 +40,8 @@ class BotExideExtension(DiscordExtension):
     def list_commands(self, ctx: ExecutionContext):
         return [
             'reboot',
-            'strict'
+            'strict',
+            'cancel - music choice cancellation'
         ]
 
     async def initialize(self, bot):

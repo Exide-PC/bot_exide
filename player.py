@@ -114,6 +114,7 @@ class Player(Voice):
                     logging.info(f'Dequeued item {item.short_title} ({short_id})')
 
                     if (not item.context.author_vc):
+                        logging.info(f'{item.context.author.name} requested a song not being in voice channel')
                         continue
 
                     await self.ensure_connection()

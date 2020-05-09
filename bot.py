@@ -135,16 +135,16 @@ class BotExide(discord.Client):
         async def choice_callback(options: []):
             return await self.choice(options, author.id, send_message)
 
-        def loading_callback(stop_event):
+        def loading_callback(stop_event, message='Loading'):
             async def loading_async():
-                await asyncio.sleep(3)
+                await asyncio.sleep(2)
                 if (stop_event.is_set()): return
-                
-                status_message = await send_message('Loading')
+
+                status_message = await send_message(message)
                 counter = 0
                 while (not stop_event.is_set()):
                     dots = counter % 3 + 1
-                    await status_message.edit(content=f'Loading{"." * dots}')
+                    await status_message.edit(content=f'{message}{"." * dots}')
                     await asyncio.sleep(1)
                     counter += 1
                 await status_message.delete()

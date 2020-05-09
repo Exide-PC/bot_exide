@@ -39,7 +39,10 @@ class BrowserExtension(DiscordExtension):
             return
 
         if (cmd == 'vk'):
+            search_finished_event = asyncio.Event()
+            ctx.loading_callback(search_finished_event, 'Searching')
             handle: SearchResultHandle = await execute_blocking(browser.search, ctx.args)
+            search_finished_event.set()
 
             try:
                 options = list(map(lambda r: f"{r.author} - {r.title} [{r.duration}]", handle.results))

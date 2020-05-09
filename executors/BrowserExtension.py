@@ -1,6 +1,6 @@
 from models.DiscordExtension import DiscordExtension
 from models.ExecutionContext import ExecutionContext
-from browser import Browser, SearchResultHandle, MusicEntry
+from browser import Browser, SearchHandle, MusicEntry
 from player import Player
 import asyncio
 import discord
@@ -41,10 +41,12 @@ class BrowserExtension(DiscordExtension):
         if (cmd == 'vk'):
             search_finished_event = asyncio.Event()
             ctx.loading_callback(search_finished_event, 'Searching')
-            handle: SearchResultHandle = await execute_blocking(browser.search, ctx.args)
-            search_finished_event.set()
-
             try:
+                handle: SearchHandle = await execute_blocking(browser.search, ctx.args)
+            finally:
+                search_finished_event.set()
+
+            with handle:
                 options = list(map(lambda r: f"{r.author} - {r.title} [{r.duration}]", handle.results))
                 options = options[:15]
 
@@ -61,10 +63,11 @@ class BrowserExtension(DiscordExtension):
                     if (not cached_path):
                         logging.info(f'No cache for vm music {title} was not found, downloading...')
                         loaded_event = asyncio.Event()
-
                         ctx.loading_callback(loaded_event)
-                        actual_path = await execute_blocking(handle.download, index)
-                        loaded_event.set()
+                        try:
+                            actual_path = await execute_blocking(handle.download, index)
+                        finally:
+                            loaded_event.set()
 
                         cached_path = self._vkCacheRepository.cache(actual_path, result)
 
@@ -72,8 +75,6 @@ class BrowserExtension(DiscordExtension):
                         await ctx.send_message('Your music was added to queue')
 
                     self._player.enqueue_with_path(cached_path, title, ctx)
-            finally:
-                handle.reset()
 
     def list_commands(self, ctx: ExecutionContext):
         return ['vk <music query>']

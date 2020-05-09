@@ -20,10 +20,9 @@ from models.ExecutionContext import ExecutionContext
 from models.ExecutionException import ExecutionException
 from messageFormatter import MessageFormatter, MessageType
 from utils.linq import first
+from utils.env import env
 
 # https://discordpy.readthedocs.io/en/latest/api.html
-
-is_production = os.getenv('MODE') == 'PRODUCTION'
 
 class BotExide(discord.Client):
 
@@ -31,7 +30,7 @@ class BotExide(discord.Client):
     _strictMode = False
     _configRepo = None
     _formatter = MessageFormatter()
-    _notify_connected = is_production
+    _notify_connected = env.is_production
 
     def __init__(self, extensions, configRepo, loop=None, **options):
         self._extensions = extensions

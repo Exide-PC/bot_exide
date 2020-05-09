@@ -13,12 +13,13 @@ from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 from lxml import html
 from os import path
+from utils.env import env
 
 # https://chromedriver.chromium.org/downloads
 # https://selenium-python.readthedocs.io/locating-elements.html
 
-login = os.getenv('VK_LOGIN')
-password = os.getenv('VK_PASSWORD')
+login = env.vk_login
+password = env.vk_password
 
 class MusicEntry:
     def __init__(self, title, author, duration):

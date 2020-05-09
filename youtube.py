@@ -11,9 +11,9 @@ import logging
 from models.ExecutionException import ExecutionException
 import asyncio
 from utils.execute_blocking import execute_blocking
+from utils.env import env
 
-load_dotenv()
-token = os.getenv('GOOGLE_TOKEN')
+token = env.google_token
 
 class YoutubeService:
     _player = None

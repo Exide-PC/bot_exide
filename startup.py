@@ -19,6 +19,7 @@ from executors.BrowserExtension import BrowserExtension
 from repositories.configRepository import ConfigRepository
 from repositories.vkCacheRepository import VkCacheRepository
 from browser import Browser
+from utils.env import env
 
 def set_logger():
     class LogFilter(logging.Filter):
@@ -48,10 +49,8 @@ def set_logger():
     rootLogger.addHandler(consoleHandler)
 
 set_logger()
-env = load_dotenv()
-discord_token = os.getenv('DISCORD_TOKEN')
 
-if (discord_token == None):
+if (env.discord_token == None):
     raise Exception('Ensure .env file exists')
 
 gachi_playlist1 = 'PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG'
@@ -104,4 +103,7 @@ extensions = [
 ]
 
 bot = BotExide(extensions, configRepo)
-bot.run(discord_token)
+try:
+    bot.run(env.discord_token)
+finally:
+    browser.quit()

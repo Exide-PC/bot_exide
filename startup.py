@@ -94,8 +94,8 @@ def reboot_handler():
     sys.exit()
 
 extensions = [
-    # PlayerExtension(player),
-    # YoutubeExtension(youtube),
+    PlayerExtension(player),
+    YoutubeExtension(youtube),
     GachiExtension(gachi),
     AliasExtension(configRepo),
     BotExideExtension(reboot_handler),

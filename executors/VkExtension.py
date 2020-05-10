@@ -37,6 +37,7 @@ class VkExtension(DiscordExtension):
 
     async def initialize(self, bot):
         self._vkService = VkService(
+            bot,
             self._browser,
             self._player,
             self._vkCacheRepo

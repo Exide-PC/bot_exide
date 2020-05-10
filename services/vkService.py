@@ -6,15 +6,18 @@ from player import Player
 from utils.env import env
 import asyncio
 from utils.execute_blocking import execute_blocking
+from bot import BotExide
 import logging
 
 class VkService:
 
+    _bot: BotExide = None
     _browser: Browser = None
     _player: Player = None
     _vkCacheRepository: VkCacheRepository = None
 
-    def __init__(self, browser, player, vkCacheRepository):
+    def __init__(self, bot, browser, player, vkCacheRepository):
+        self._bot = bot
         self._browser = browser
         self._player = player
         self._vkCacheRepository = vkCacheRepository

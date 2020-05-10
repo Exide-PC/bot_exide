@@ -30,7 +30,7 @@ class BotExide(discord.Client):
     _strictMode = False
     _configRepo = None
     _formatter = MessageFormatter()
-    _notify_connected = env.is_production
+    _initialized = False
 
     def __init__(self, extensions, configRepo, loop=None, **options):
         self._extensions = extensions
@@ -190,14 +190,18 @@ class BotExide(discord.Client):
                 await context.send_message('Unknown error occured. Contact <@!286920219912306688>')
             
     async def on_ready(self):
+        if (self._initialized):
+            return
+
         logging.info('Initializing extensions...')
         for executor in self._extensions:
             await executor.initialize(self)
         logging.info('Finished extensions initialization')
         logging.info(f'{self.user} has connected')
 
-        if (self._notify_connected):
-            self._notify_connected = False
+        if (env.is_production):
             channel = first(self.guilds[0].channels, lambda c: c.name == 'bot-exide')
             (content, embed) = self._formatter.format('Bot connected', MessageType.Italic)
             await channel.send(content=content, embed=embed)
+
+        self._initialized = True

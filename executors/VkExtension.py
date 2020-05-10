@@ -36,4 +36,4 @@ class VkExtension(DiscordExtension):
         return ['vk <music query>']
 
     async def initialize(self, bot):
-        pass
+        self._vkService.initialize()

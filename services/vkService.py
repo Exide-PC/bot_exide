@@ -19,6 +19,30 @@ class VkService:
         self._player = player
         self._vkCacheRepository = vkCacheRepository
 
+        json = requests.get('https://api.vk.com/method/groups.getLongPollServer', params={
+            'group_id': env.vk_group_id,
+            'access_token': env.vk_token,
+            'v': '5.103'
+        }).json()['response']
+
+        self._server = json['server']
+        self._sessionKey = json['key']
+        self._eventId = json['ts']
+
+    def initialize(self):
+        pass
+
+    def poll_events(self):
+        json = requests.get(self._server, params={
+            'act': 'a_check',
+            'key': self._sessionKey,
+            'ts': self._eventId,
+            'wait': 25
+        }).json()
+
+        self._eventId = json['ts']
+        return json['updates']
+
     async def search(self, query, ctx):
         if (self._browser.isbusy):
             await ctx.send_message('Service is currently busy')
@@ -60,4 +84,3 @@ class VkService:
                     await ctx.send_message('Your music was added to queue')
 
                 self._player.enqueue_with_path(cached_path, title, ctx)
-

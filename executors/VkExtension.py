@@ -14,10 +14,10 @@ from services.vkService import VkService
 
 class VkExtension(DiscordExtension):
 
-    _vkService: VkService = None
-
-    def __init__(self, vkService):
-        self._vkService = vkService
+    def __init__(self, browser, player, vkCacheRepo):
+        self._browser = browser
+        self._player = player
+        self._vkCacheRepo = vkCacheRepo
 
     @property
     def name(self):
@@ -36,4 +36,8 @@ class VkExtension(DiscordExtension):
         return ['vk <music query>']
 
     async def initialize(self, bot):
-        self._vkService.initialize()
+        self._vkService = VkService(
+            self._browser,
+            self._player,
+            self._vkCacheRepo
+        )

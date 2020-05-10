@@ -82,11 +82,11 @@ else:
 
 configRepo = ConfigRepository(cfg, update_cfg)
 player = Player()
+# TODO: Extensions manage their dependencies themselves
 gachi = GachiService(player, configRepo)
 youtube = YoutubeService(player, configRepo)
 vkCacheRepo = VkCacheRepository()
 browser = Browser()
-vkService = VkService(browser, player, vkCacheRepo)
 
 def reboot_handler():
     browser.quit()
@@ -101,7 +101,7 @@ extensions = [
     GachiExtension(gachi),
     AliasExtension(configRepo),
     BotExideExtension(reboot_handler),
-    VkExtension(vkService)
+    VkExtension(browser, player, vkCacheRepo)
 ]
 
 bot = BotExide(extensions, configRepo)

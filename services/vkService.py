@@ -29,10 +29,7 @@ class VkService:
         self._sessionKey = json['key']
         self._eventId = json['ts']
 
-    def initialize(self):
-        pass
-
-    def poll_events(self):
+    def __poll_events(self):
         json = requests.get(self._server, params={
             'act': 'a_check',
             'key': self._sessionKey,

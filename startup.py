@@ -15,11 +15,12 @@ from executors.GachiExtension import GachiExtension
 from executors.YoutubeExtension import YoutubeExtension
 from executors.AliasExtension import AliasExtension
 from executors.BotExideExtension import BotExideExtension
-from executors.BrowserExtension import BrowserExtension
+from executors.VkExtension import VkExtension
 from repositories.configRepository import ConfigRepository
 from repositories.vkCacheRepository import VkCacheRepository
 from browser import Browser
 from utils.env import env
+from services.vkService import VkService
 
 def set_logger():
     class LogFilter(logging.Filter):
@@ -85,6 +86,7 @@ gachi = GachiService(player, configRepo)
 youtube = YoutubeService(player, configRepo)
 vkCacheRepo = VkCacheRepository()
 browser = Browser()
+vkService = VkService(browser, player, vkCacheRepo)
 
 def reboot_handler():
     browser.quit()
@@ -99,7 +101,7 @@ extensions = [
     GachiExtension(gachi),
     AliasExtension(configRepo),
     BotExideExtension(reboot_handler),
-    BrowserExtension(browser, player, vkCacheRepo)
+    VkExtension(vkService)
 ]
 
 bot = BotExide(extensions, configRepo)

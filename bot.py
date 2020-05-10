@@ -45,39 +45,73 @@ class BotExide(discord.Client):
     def strictMode(self, value):
         self._strictMode = value
 
-    async def choice(self, options: [], user_id, send_message):
-        options_content = ""
-        for i in range(len(options)):
-            content_preview = options_content + f'{i + 1}. {options[i]}'
-            content_preview += '\n' if i != len(options) - 1 else ''
-            if (len(content_preview) >= 1900): # 2000 max, but remaining some chars for service stuff
-                logging.info('Choice options take more than 2000 chars, truncating...')
-                break
-            options_content = content_preview
+    def __create_send_message(self, channel):
+        async def send_message(payload, messageType: MessageType = MessageType.Common):
+            (content, embed) = self._formatter.format(payload, messageType)
+            logging.info(f'Sending message "{payload}"')
+            return await channel.send(content=content, embed=embed)
 
-        await send_message(options_content)
-        result = None
+        return send_message
 
-        def check(m):
-            if (m.author.id != user_id): return False
-            if (m.content == 'cancel'): return True
+    def __create_choice_dialog(self, author_id, send_message):
+        async def choice_dialog_impl(options: []):
+            options_content = ""
+            for i in range(len(options)):
+                content_preview = options_content + f'{i + 1}. {options[i]}'
+                content_preview += '\n' if i != len(options) - 1 else ''
+                if (len(content_preview) >= 1900): # 2000 max, but remaining some chars for service stuff
+                    logging.info('Choice options take more than 2000 chars, truncating...')
+                    break
+                options_content = content_preview
+
+            await send_message(options_content)
+            result = None
+
+            def check(m):
+                if (m.author.id != author_id): return False
+                if (m.content == 'cancel'): return True
+                try:
+                    i = int(m.content) - 1
+                    if (i < 0 or i >= len(options)): return False
+                    nonlocal result
+                    result = i
+                    return True
+                except ValueError:
+                    return False
+
             try:
-                i = int(m.content) - 1
-                if (i < 0 or i >= len(options)): return False
-                nonlocal result
-                result = i
-                return True
-            except ValueError:
-                return False
+                await self.wait_for('message', check=check, timeout=20)
+                return result
+            except asyncio.TimeoutError:
+                await send_message('Choice timeout')
+                pass
 
-        try:
-            await self.wait_for('message', check=check, timeout=20)
-            return result
-        except asyncio.TimeoutError:
-            await send_message('Choice timeout')
-            pass
+        return choice_dialog_impl
 
-    def find_replacer(self, msg):
+    def __create_loading(self, send_message):
+        def loading_impl(stop_event, message='Loading'):
+            async def loading_async():
+                await asyncio.sleep(2)
+                if (stop_event.is_set()): return
+
+                messageType = MessageType.Italic
+                status_message = await send_message(message, messageType)
+
+                counter = 0
+                while (not stop_event.is_set()):
+                    dots = counter % 3 + 1
+                    (content, embed) = self._formatter.format(f'{message}{"." * dots}', messageType)
+                    await status_message.edit(content=content, embed=embed)
+                    await asyncio.sleep(1)
+                    counter += 1
+                await status_message.delete()
+
+            loop = asyncio.get_event_loop()
+            loop.create_task(loading_async())
+
+        return loading_impl
+
+    def __find_replacer(self, msg):
         while(True):
             msg = msg.strip()
             replacer = None
@@ -117,39 +151,15 @@ class BotExide(discord.Client):
             message.channel.name != 'bot-exide' or
             message.author == self.user): return
 
-        final_message = self.find_replacer(message.content)
+        final_message = self.__find_replacer(message.content)
         author = self.guilds[0].get_member(message.author.id)
         
         cmd = final_message.split(' ')[0].lower()
         args = final_message[len(cmd) + 1:].strip()
 
-        async def send_message(payload, messageType: MessageType = MessageType.Common):
-            (content, embed) = self._formatter.format(payload, messageType)
-            logging.info(f'Sending message "{payload}"')
-            return await message.channel.send(content=content, embed=embed)
-
-        async def choice_callback(options: []):
-            return await self.choice(options, author.id, send_message)
-
-        def loading_callback(stop_event, message='Loading'):
-            async def loading_async():
-                await asyncio.sleep(2)
-                if (stop_event.is_set()): return
-
-                messageType = MessageType.Italic
-                status_message = await send_message(message, messageType)
-
-                counter = 0
-                while (not stop_event.is_set()):
-                    dots = counter % 3 + 1
-                    (content, embed) = self._formatter.format(f'{message}{"." * dots}', messageType)
-                    await status_message.edit(content=content, embed=embed)
-                    await asyncio.sleep(1)
-                    counter += 1
-                await status_message.delete()
-
-            loop = asyncio.get_event_loop()
-            loop.create_task(loading_async())
+        send_message = self.__create_send_message(message.channel)
+        choice_dialog = self.__create_choice_dialog(author.id, send_message)
+        loading = self.__create_loading(send_message)
 
         context = ExecutionContext(
             cmd,
@@ -157,8 +167,8 @@ class BotExide(discord.Client):
             final_message,
             author,
             send_message,
-            choice_callback,
-            loading_callback,
+            choice_dialog,
+            loading,
             author.id in self._configRepo.config['admins']
         )
 

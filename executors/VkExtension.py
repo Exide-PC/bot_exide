@@ -14,10 +14,10 @@ from services.vkService import VkService
 
 class VkExtension(DiscordExtension):
 
-    def __init__(self, browser, player, vkCacheRepo):
+    def __init__(self, browser, player):
         self._browser = browser
         self._player = player
-        self._vkCacheRepo = vkCacheRepo
+        self._vkCacheRepo = VkCacheRepository()
 
     @property
     def name(self):

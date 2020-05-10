@@ -3,11 +3,12 @@ from models.ExecutionContext import ExecutionContext
 from player import Player
 import asyncio
 import discord
+from gachi_service import GachiService
 
 class GachiExtension(DiscordExtension):
-    def __init__(self, gachi_service):
+    def __init__(self, player: Player, configRepo):
         super().__init__()
-        self.service = gachi_service
+        self._service = GachiService(player, configRepo)
 
     @property
     def name(self):
@@ -17,7 +18,7 @@ class GachiExtension(DiscordExtension):
         return ctx.cmd in ['gachi', 'skip', 'stop']
 
     async def execute(self, ctx: ExecutionContext):
-        service = self.service
+        service = self._service
         cmd = ctx.cmd
         args = ctx.args
 

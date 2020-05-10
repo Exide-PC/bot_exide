@@ -3,11 +3,13 @@ from models.ExecutionContext import ExecutionContext
 from player import Player
 import asyncio
 import discord
+from youtube import YoutubeService
 
 class YoutubeExtension(DiscordExtension):
-    def __init__(self, youtube_service):
+
+    def __init__(self, player: Player, configRepo):
         super().__init__()
-        self.service = youtube_service
+        self._service = YoutubeService(player, configRepo)
 
     @property
     def name(self):
@@ -17,7 +19,7 @@ class YoutubeExtension(DiscordExtension):
         return ctx.cmd in ['play', 'search']
 
     async def execute(self, ctx: ExecutionContext):
-        service = self.service
+        service = self._service
         cmd = ctx.cmd
         args = ctx.args
 

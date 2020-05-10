@@ -8,8 +8,6 @@ import logging
 from bot import BotExide
 from dotenv import load_dotenv
 from player import Player
-from gachi_service import GachiService
-from youtube import YoutubeService
 from executors.PlayerExtension import PlayerExtension
 from executors.GachiExtension import GachiExtension
 from executors.YoutubeExtension import YoutubeExtension
@@ -82,10 +80,6 @@ else:
 
 configRepo = ConfigRepository(cfg, update_cfg)
 player = Player()
-# TODO: Extensions manage their dependencies themselves
-gachi = GachiService(player, configRepo)
-youtube = YoutubeService(player, configRepo)
-vkCacheRepo = VkCacheRepository()
 browser = Browser()
 
 def reboot_handler():
@@ -97,11 +91,11 @@ def reboot_handler():
 
 extensions = [
     PlayerExtension(player),
-    YoutubeExtension(youtube),
-    GachiExtension(gachi),
+    YoutubeExtension(player, configRepo),
+    GachiExtension(player, configRepo),
     AliasExtension(configRepo),
     BotExideExtension(reboot_handler),
-    VkExtension(browser, player, vkCacheRepo)
+    VkExtension(browser, player)
 ]
 
 bot = BotExide(extensions, configRepo)

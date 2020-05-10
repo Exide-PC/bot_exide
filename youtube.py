@@ -52,7 +52,7 @@ class YoutubeService:
             await self.enqueue_video(result_id, selected['title'], ctx)
 
     async def play(self, args, ctx):
-        if (args == None or ctx.author_vc == None):
+        if (args == None or ctx.voice_channel() == None):
             return
 
         parts = list(filter(None, args.split(' ')))

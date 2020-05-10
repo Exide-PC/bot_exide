@@ -113,7 +113,7 @@ class Player(Voice):
                     self.current_item = item
                     logging.info(f'Dequeued item {item.short_title} ({short_id})')
 
-                    if (not item.context.author_vc):
+                    if (not item.context.voice_channel()):
                         logging.info(f'{item.context.author.name} requested a song not being in voice channel')
                         continue
 
@@ -125,7 +125,7 @@ class Player(Voice):
                         continue
 
                     await self.ensure_connection()
-                    await self.join_channel(item.context.author_vc)
+                    await self.join_channel(item.context.voice_channel())
                     await self.notify_playing(item)
 
                     # post-condition loop to play music at least one

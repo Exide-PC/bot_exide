@@ -23,7 +23,7 @@ class PlayerExtension(DiscordExtension):
         player = self.player
 
         if (ctx.cmd == 'join'):
-            await player.join_channel(ctx.author_vc)
+            await player.join_channel(ctx.voice_channel())
 
         elif (ctx.cmd == 'disc'):
             await player.disconnect()

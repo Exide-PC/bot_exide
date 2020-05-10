@@ -48,14 +48,14 @@ class GachiService:
         self._player.is_queue_mode = True
 
     async def radio(self, ctx):
-        if (ctx.author_vc == None):
+        if (ctx.voice_channel() == None):
             return
 
         is_radio = not self.is_radio
         await ctx.send_message(f'Gachi radio is {"On" if is_radio else "Off"}')
 
         if (is_radio):
-            await self._player.join_channel(ctx.author_vc)
+            await self._player.join_channel(ctx.voice_channel())
             self.message_callback = ctx.send_message
             asyncio.create_task(self._radio_loop())
         else:
@@ -63,7 +63,7 @@ class GachiService:
         self.is_radio = is_radio
 
     async def search(self, query, ctx):
-        if (ctx.author_vc == None):
+        if (ctx.voice_channel() == None):
             return
 
         search_results = self._search(query)

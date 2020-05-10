@@ -118,11 +118,7 @@ class BotExide(discord.Client):
             message.author == self.user): return
 
         final_message = self.find_replacer(message.content)
-
-        # we also need the 'voice' property which is not being
-        # passed in case the message was received via PM
         author = self.guilds[0].get_member(message.author.id)
-        author_vc = author.voice.channel if author.voice != None else None
         
         cmd = final_message.split(' ')[0].lower()
         args = final_message[len(cmd) + 1:].strip()
@@ -160,7 +156,6 @@ class BotExide(discord.Client):
             args if len(args) > 0 else None,
             final_message,
             author,
-            author_vc,
             send_message,
             choice_callback,
             loading_callback,

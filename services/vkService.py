@@ -55,10 +55,13 @@ class VkService:
 
             return self._vkCacheRepository.cache_v2(id, doc.content)
 
-        title = f"{audio['artist']} - {audio['title']} " # TODO [user, vk pm]
+        author = ctx.author.display_name
+        title = f'{audio["artist"]} - {audio["title"]}'
+        title_with_source = f'{title} [by {author}, vk pm]'
+
         if (self._player.is_playing()):
-            await ctx.send_message(f'Music "{title}" was added to queue by vk message')
-        self._player.enqueue(item_callback, title, ctx)
+            await ctx.send_message(f'Music "{title}" was added to queue by vk pm from {author}')
+        self._player.enqueue(item_callback, title_with_source, ctx)
 
     async def __loop(self):
         while (True):
@@ -66,9 +69,10 @@ class VkService:
                 events = await execute_blocking(self.__poll_events)
 
                 for event in events:
-                    # TODO: Map vk user id to discord id
                     vk_user_id = event['object']['user_id']
                     discord_user_id = self._configRepo.get_discord_user_id_bound_to_vk(vk_user_id)
+                    if (not discord_user_id):
+                        continue
                     context = self._bot.create_user_context(discord_user_id)
 
                     if (event['type'] != 'message_new'):

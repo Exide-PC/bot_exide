@@ -14,31 +14,43 @@ from services.vkService import VkService
 
 class VkExtension(DiscordExtension):
 
-    def __init__(self, browser, player):
+    def __init__(self, browser, player, configRepo):
         self._browser = browser
         self._player = player
         self._vkCacheRepo = VkCacheRepository()
+        self._configRepo = configRepo
 
     @property
     def name(self):
         return 'VK commands'
 
     def isserving(self, ctx: ExecutionContext):
-        return ctx.cmd in ['vk']
+        return ctx.cmd in ['vk', 'vk-add']
 
     async def execute(self, ctx: ExecutionContext):
         cmd = ctx.cmd
 
         if (cmd == 'vk'):
             await self._vkService.search(ctx.args, ctx)
+        elif (cmd == 'vk-add'):
+            try:
+                vk_user_id  = int(ctx.args)
+                discord_user_id = ctx.author.id
+                await self._vkService.bind_user(vk_user_id, discord_user_id, ctx)
+            except ValueError:
+                await ctx.send_message('Incorrect vk user id')
 
     def list_commands(self, ctx: ExecutionContext):
-        return ['vk <music query>']
+        return [
+            'vk <music query>',
+            'vk-add <vk_user_id> - bind vk user id'
+        ]
 
     async def initialize(self, bot):
         self._vkService = VkService(
             bot,
             self._browser,
             self._player,
-            self._vkCacheRepo
+            self._vkCacheRepo,
+            self._configRepo
         )

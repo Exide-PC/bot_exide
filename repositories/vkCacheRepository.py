@@ -23,4 +23,17 @@ class VkCacheRepository:
 
     def __get_path(self, music: MusicEntry):
         name = replace_forbidden(f'{music.author} - {music.title} - {music.duration}.mp3')
-        return os.path.join(os.getcwd(), self.__cache_path, name) 
+        return os.path.join(os.getcwd(), self.__cache_path, name)
+
+    def cache_v2(self, id, content):
+        cached_path = self.__get_path_v2(id)
+        with open(cached_path, 'wb') as f:
+            f.write(content)
+        return cached_path
+
+    def try_get_v2(self, id):
+        cached_path = self.__get_path_v2(id)
+        return cached_path if path.exists(cached_path) else None
+
+    def __get_path_v2(self, id):
+        return os.path.join(os.getcwd(), self.__cache_path, f'{id}.mp3')

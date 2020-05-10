@@ -45,6 +45,9 @@ class BotExide(discord.Client):
     def strictMode(self, value):
         self._strictMode = value
 
+    def __get_channel(self):
+        return first(self.guilds[0].channels, lambda c: c.name == 'bot-exide')
+
     def __create_send_message(self, channel):
         async def send_message(payload, messageType: MessageType = MessageType.Common):
             (content, embed) = self._formatter.format(payload, messageType)
@@ -198,7 +201,25 @@ class BotExide(discord.Client):
             except Exception as e:
                 logging.error(f'Unknown error occured during "{context.msg}" message processing. {e}')
                 await context.send_message('Unknown error occured. Contact <@!286920219912306688>')
-            
+
+    def create_user_context(self, user_id):
+        author = self.guilds[0].get_member(user_id)
+        channel = self.__get_channel()
+        send_message = self.__create_send_message(channel)
+        choice_dialog = self.__create_choice_dialog(user_id, send_message)
+        loading = self.__create_loading(send_message)
+
+        return ExecutionContext(
+            None,
+            None,
+            None,
+            author,
+            send_message,
+            choice_dialog,
+            loading,
+            author.id in self._configRepo.config['admins']
+        )
+
     async def on_ready(self):
         if (self._initialized):
             return

@@ -71,6 +71,8 @@ if (not os.path.exists(cfg_path)):
                 youtube.playlist_items(gachi_playlist2),
             'aliases': [],
             'admins': [],
+            'discord_vk_map': [],
+            'vk_last_message_id': 125,
             'video-titles': []
         }
         json.dump(cfg, f, indent=4)
@@ -95,7 +97,7 @@ extensions = [
     GachiExtension(player, configRepo),
     AliasExtension(configRepo),
     BotExideExtension(reboot_handler),
-    VkExtension(browser, player)
+    VkExtension(browser, player, configRepo)
 ]
 
 bot = BotExide(extensions, configRepo)

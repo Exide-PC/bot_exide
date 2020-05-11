@@ -82,7 +82,8 @@ class VkService:
                     for audio in audio_objects:
                         await self.__enqueue_audio(audio, context)
             except Exception as e:
-                logging.error(f'Error occured during vk events polling: {e}')
+                logging.error(f'Error occured during vk events polling')
+                logging.error(e)
 
     def __poll_events(self):
         json = requests.get(self._server, params={

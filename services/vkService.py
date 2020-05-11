@@ -148,8 +148,5 @@ class VkService:
             'random_id': message_id
         }).json()
 
-        error = json.get('error')
-        if (error and error['error_code'] == 901):
-            await ctx.send_message("Your VK profile was successfully registered") # Maybe not...
-        else:
-            await ctx.send_message("Your VK profile was successfully registered")
+        
+        await ctx.send_message("Your VK profile was successfully registered. Now you can send music via pm to https://vk.com/exideprod")

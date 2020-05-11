@@ -187,6 +187,6 @@ class VkService:
             'peer_id': vk_user_id,
             'message': 'Готов включать твой музончик',
             'random_id': message_id
-        }).json()
+        })
         
         await ctx.send_message("Your VK profile was successfully registered. Now you can send music via pm to https://vk.com/exideprod")

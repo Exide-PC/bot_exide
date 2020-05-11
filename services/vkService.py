@@ -62,11 +62,16 @@ class VkService:
                         continue
                     if (not event['object'].get('attachments')):
                         continue
+                    
                     message = event['object']['body']
                     audio_attachments = list(filter(lambda a: a['type'] == 'audio', event['object']['attachments']))
                     audio_objects = list(map(lambda a: a['audio'], audio_attachments))
+                    if (len(audio_objects) == 0):
+                        continue
 
                     vk_user_id = event['object']['user_id']
+                    self.__mark_as_read(vk_user_id, event['object']['id'])
+
                     discord_user_id = self._configRepo.get_discord_user_id_bound_to_vk(vk_user_id)
                     if (not discord_user_id):
                         logging.info(f'Vk user id {vk_user_id} has not bound discord profile')
@@ -83,6 +88,13 @@ class VkService:
             except Exception as e:
                 logging.error(f'Error occured during vk events polling')
                 logging.error(e)
+
+    def __mark_as_read(self, peer_id, start_message_id):
+        self.__execute_method('messages.markAsRead', {
+            'peer_id': peer_id,
+            'start_message_id': start_message_id,
+            'group_id': env.vk_group_id
+        })
 
     def __poll_events(self):
         def poll_impl():
@@ -108,17 +120,22 @@ class VkService:
         return json['updates']
 
     def __establish_connection(self):
-        json = requests.get('https://api.vk.com/method/groups.getLongPollServer', params={
-            'group_id': env.vk_group_id,
-            'access_token': env.vk_token,
-            'v': '5.103'
-        }).json()['response']
+        json = self.__execute_method('groups.getLongPollServer', {
+            'group_id': env.vk_group_id
+        })['response']
 
         self._server = json['server']
         self._sessionKey = json['key']
         self._eventId = json['ts']
 
         logging.info(f'Established vk api connection. Response: {json}')
+
+    def __execute_method(self, method, params):
+        return requests.get(f'https://api.vk.com/method/{method}', params={
+            'access_token': env.vk_token,
+            'v': '5.103',
+            **params
+        }).json()
 
     async def search(self, query, ctx):
         if (self._browser.isbusy):
@@ -165,13 +182,11 @@ class VkService:
     async def bind_user(self, vk_user_id, discord_user_id, ctx):
         self._configRepo.bind_vk_user(vk_user_id, discord_user_id)
         message_id = self._configRepo.get_next_vk_message_id()
-        json = requests.get('https://api.vk.com/method/messages.send', params={
+
+        json = self.__execute_method('messages.send', {
             'peer_id': vk_user_id,
-            'access_token': env.vk_token,
-            'v': '5.103',
             'message': 'Готов включать твой музончик',
             'random_id': message_id
         }).json()
-
         
         await ctx.send_message("Your VK profile was successfully registered. Now you can send music via pm to https://vk.com/exideprod")

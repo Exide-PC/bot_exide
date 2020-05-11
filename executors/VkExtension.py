@@ -31,7 +31,8 @@ class VkExtension(DiscordExtension):
         cmd = ctx.cmd
 
         if (cmd == 'vk'):
-            await self._vkService.search(ctx.args, ctx)
+            # await self._vkService.search(ctx.args, ctx)
+            await ctx.send_message('Vk music search is currently disabled, use command "vk-add <vk_user_id>"')
         elif (cmd == 'vk-add'):
             try:
                 vk_user_id  = int(ctx.args)

@@ -82,7 +82,7 @@ else:
 
 configRepo = ConfigRepository(cfg, update_cfg)
 player = Player()
-browser = Browser()
+browser = None # Browser()
 
 def reboot_handler():
     browser.quit()
@@ -104,4 +104,5 @@ bot = BotExide(extensions, configRepo)
 try:
     bot.run(env.discord_token)
 finally:
-    browser.quit()
+    pass
+    # browser.quit()

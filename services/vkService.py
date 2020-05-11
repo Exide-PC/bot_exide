@@ -57,11 +57,9 @@ class VkService:
 
         author = ctx.author.display_name
         title = f'{audio["artist"]} - {audio["title"]}'
-        title_with_source = f'{title} [by {author}, vk pm]'
 
-        if (self._player.is_playing()):
-            await ctx.send_message(f'Music "{title}" was added to queue by vk pm from {author}')
-        self._player.enqueue(item_callback, title_with_source, ctx)
+        await ctx.send_message(f'Music "{title}" was added to queue by vk pm from {author}')
+        self._player.enqueue(item_callback, title, ctx)
 
     async def __loop(self):
         while (True):

@@ -58,12 +58,6 @@ class VkService:
                 events = await execute_blocking(self.__poll_events)
 
                 for event in events:
-                    vk_user_id = event['object']['user_id']
-                    discord_user_id = self._configRepo.get_discord_user_id_bound_to_vk(vk_user_id)
-                    if (not discord_user_id):
-                        continue
-                    context = self._bot.create_user_context(discord_user_id)
-
                     if (event['type'] != 'message_new'):
                         continue
                     if (not event['object'].get('attachments')):
@@ -72,6 +66,18 @@ class VkService:
                     audio_attachments = list(filter(lambda a: a['type'] == 'audio', event['object']['attachments']))
                     audio_objects = list(map(lambda a: a['audio'], audio_attachments))
 
+                    vk_user_id = event['object']['user_id']
+                    discord_user_id = self._configRepo.get_discord_user_id_bound_to_vk(vk_user_id)
+                    if (not discord_user_id):
+                        logging.info(f'Vk user id {vk_user_id} has not bound discord profile')
+                        continue
+
+                    context = self._bot.create_user_context(discord_user_id)
+                    if (context.voice_channel() == None):
+                        logging.info(f'Discord user id {discord_user_id} has the song via vk pm not being on the server')
+                        continue
+
+                    logging.info(f'Discord user id {discord_user_id} has requested the song via vk pm')
                     for audio in audio_objects:
                         await self.__enqueue_audio(audio, context)
             except Exception as e:

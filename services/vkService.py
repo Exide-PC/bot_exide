@@ -24,16 +24,7 @@ class VkService:
         self._vkCacheRepository = vkCacheRepository
         self._configRepo = configRepo
 
-        json = requests.get('https://api.vk.com/method/groups.getLongPollServer', params={
-            'group_id': env.vk_group_id,
-            'access_token': env.vk_token,
-            'v': '5.103'
-        }).json()['response']
-
-        self._server = json['server']
-        self._sessionKey = json['key']
-        self._eventId = json['ts']
-
+        self.__establish_connection()
         asyncio.create_task(self.__loop())
 
     async def __enqueue_audio(self, audio, ctx):
@@ -75,6 +66,8 @@ class VkService:
 
                     if (event['type'] != 'message_new'):
                         continue
+                    if (not event['object'].get('attachments')):
+                        continue
                     message = event['object']['body']
                     audio_attachments = list(filter(lambda a: a['type'] == 'audio', event['object']['attachments']))
                     audio_objects = list(map(lambda a: a['audio'], audio_attachments))
@@ -86,15 +79,40 @@ class VkService:
                 logging.error(e)
 
     def __poll_events(self):
-        json = requests.get(self._server, params={
-            'act': 'a_check',
-            'key': self._sessionKey,
-            'ts': self._eventId,
-            'wait': 25
-        }).json()
+        def poll_impl():
+            return requests.get(self._server, params={
+                'act': 'a_check',
+                'key': self._sessionKey,
+                'ts': self._eventId,
+                'wait': 25
+            }).json()
+
+        json = poll_impl()
+
+        failed_code = json.get('failed')
+        if (failed_code):
+            logging.info(f'Failed polling attempt encountered. Response: {json}')
+            if (failed_code == 1):
+                self._eventId = json['ts']
+            else:
+                self.__establish_connection()
+            json = poll_impl()
 
         self._eventId = json['ts']
         return json['updates']
+
+    def __establish_connection(self):
+        json = requests.get('https://api.vk.com/method/groups.getLongPollServer', params={
+            'group_id': env.vk_group_id,
+            'access_token': env.vk_token,
+            'v': '5.103'
+        }).json()['response']
+
+        self._server = json['server']
+        self._sessionKey = json['key']
+        self._eventId = json['ts']
+
+        logging.info(f'Established vk api connection. Response: {json}')
 
     async def search(self, query, ctx):
         if (self._browser.isbusy):

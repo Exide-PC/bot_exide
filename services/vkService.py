@@ -74,7 +74,7 @@ class VkService:
 
                     context = self._bot.create_user_context(discord_user_id)
                     if (context.voice_channel() == None):
-                        logging.info(f'Discord user id {discord_user_id} has the song via vk pm not being on the server')
+                        logging.info(f'Discord user id {discord_user_id} has requested the song via vk pm not being on the server')
                         continue
 
                     logging.info(f'Discord user id {discord_user_id} has requested the song via vk pm')

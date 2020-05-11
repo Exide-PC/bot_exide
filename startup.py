@@ -31,7 +31,7 @@ def set_logger():
             #     record.levelno >= 30 # Warning
             )
 
-    logFormatter = logging.Formatter('[%(asctime)s %(filename)s %(levelname)s] %(message)s') # %(pathname)s
+    logFormatter = logging.Formatter('[%(asctime)s %(levelname)s, %(filename)s ln: %(lineno)d] %(message)s')
     logFilter = LogFilter()
 
     rootLogger = logging.getLogger()

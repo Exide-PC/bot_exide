@@ -81,7 +81,7 @@ class YoutubeService:
 
         # only video id was found
         if (playlist == None):
-            title = get_video_title_cache(video_id[0], self.configRepo)
+            title = self.__get_video_title(video_id[0])
             await self.enqueue_video(video_id[0], title, ctx, time_code)
         else:
             index = index and int(index[0])
@@ -141,6 +141,13 @@ class YoutubeService:
 
         self._player.enqueue(item_callback, title, ctx)
 
+    def __get_video_title(self, videoId: str):
+        title = self.configRepo.get_youtube_title_cache(videoId)
+        if (not title):
+            title = get_video_title(videoId)
+            logging.info(f"No cached title for video id '{videoId}' was found. API query result: '{title}'")
+            self.configRepo.cache_youtube_title(videoId, title)
+        return title
 
 def playlist_items(listId: str) -> []:
     url = "https://www.googleapis.com/youtube/v3/playlistItems"
@@ -178,17 +185,6 @@ def playlist_items(listId: str) -> []:
             break
 
     return videos
-
-def get_video_title_cache(videoId: str, configRepo):
-    config = configRepo.config
-    cached_titles = config['video-titles']
-    title = next((ct[1] for ct in cached_titles if ct[0] == videoId), None)
-    if (not title):
-        title = get_video_title(videoId)
-        logging.info(f"No cached title for video id '{videoId}' was found. API query result: '{title}'")
-        config['video-titles'].append([videoId, title])
-        configRepo.update_config(config)
-    return title
 
 def get_video_title(videoId: str) -> str:
     url = "https://www.googleapis.com/youtube/v3/videos"

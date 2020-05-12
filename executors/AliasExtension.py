@@ -28,21 +28,19 @@ class AliasExtension(DiscordExtension):
                 return
             alias = args[:separator]
             replacer = args[separator + 1:]
-            self.add_alias(alias, replacer, ctx)
+            self.configRepo.add_alias(alias, replacer)
             await ctx.send_message(f'Alias "{alias}" has been successfully added')
         else:
-            if (not ctx.isadmin):
+            if (ctx.isadmin):
+                self.configRepo.remove_alias(args)
+                await ctx.send_message(f'Alias "{ctx.args}" was successfully removed')
+            else:
                 await ctx.send_message('Only admin users can remove aliases')
-                return
-            config = self.configRepo.config
-            config['aliases'] = list(filter(lambda a: a[0].lower() != args.lower(), config['aliases']))
-            self.configRepo.update_config(config)
-            await ctx.send_message(f'Alias "{ctx.args}" was successfully removed')
 
     def list_commands(self, ctx: ExecutionContext):
         array = ['alias <alias> <replacer>']
         aliases = 'list: '
-        for alias in self.configRepo.config['aliases']:
+        for alias in self.configRepo.get_aliases():
             aliases += f' {alias[0]}'
         array.append(aliases)
         array.append('alias-remove <alias>')
@@ -50,20 +48,3 @@ class AliasExtension(DiscordExtension):
 
     async def initialize(self, bot):
         pass
-
-    def add_alias(self, cmd: str, replacer: str, ctx: ExecutionContext):
-        cfg = self.configRepo.config
-        current_aliases = list(map(lambda a: a[0], cfg['aliases']))
-
-        index = -1
-        if (cmd in current_aliases):
-            index = current_aliases.index(cmd)
-
-        alias = [cmd, replacer]
-        if (index == -1):
-
-            cfg['aliases'].append(alias)
-        else:
-            cfg['aliases'][index] = alias
-
-        self.configRepo.update_config(cfg)

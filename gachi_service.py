@@ -97,4 +97,4 @@ class GachiService:
 
     def __init__(self, player: Player, configRepo):
         self._player = player
-        self._gachi_list = configRepo.config['gachi']
+        self._gachi_list = configRepo.get_gachi_list()

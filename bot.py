@@ -118,7 +118,7 @@ class BotExide(discord.Client):
         while(True):
             msg = msg.strip()
             replacer = None
-            for alias in self._configRepo.config['aliases']:
+            for alias in self._configRepo.get_aliases():
                 if (alias[0].lower() == msg.lower()):
                     replacer = alias[1]
                     logging.info(f'Found suitable alias. Replacing "{alias[0]}" with "{alias[1]}"')
@@ -172,7 +172,7 @@ class BotExide(discord.Client):
             send_message,
             choice_dialog,
             loading,
-            author.id in self._configRepo.config['admins']
+            author.id in self._configRepo.get_admin_users()
         )
 
         if (context.cmd == 'help'):
@@ -217,7 +217,7 @@ class BotExide(discord.Client):
             send_message,
             choice_dialog,
             loading,
-            author.id in self._configRepo.config['admins']
+            author.id in self._configRepo.get_admin_users()
         )
 
     async def on_ready(self):

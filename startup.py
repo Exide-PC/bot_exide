@@ -52,35 +52,19 @@ set_logger()
 if (env.discord_token == None):
     raise Exception('Ensure .env file exists')
 
-gachi_playlist1 = 'PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG'
-gachi_playlist2 = 'PL0gU26yd_WJtO4z6KCXxrLlQlYaqnvXZF'
+def default_config_strategy():
+    return {
+        'gachi': 
+            youtube.playlist_items('PL-VMa2rh7q_ZQvmRt0dqidd9GUC-_42pG') + 
+            youtube.playlist_items('PL0gU26yd_WJtO4z6KCXxrLlQlYaqnvXZF'),
+        'aliases': [],
+        'admins': [],
+        'discord_vk_map': [],
+        'vk_last_message_id': 125,
+        'video-titles': []
+    }
 
-cfg_path = 'bot.cfg'
-cfg = None
-
-def update_cfg(cfg: dict):
-    with open(cfg_path, 'w') as f:
-        json.dump(cfg, f, indent=4)
-
-if (not os.path.exists(cfg_path)):
-    with open(cfg_path, 'w') as f:
-        """ default cfg """
-        cfg = {
-            'gachi': 
-                youtube.playlist_items(gachi_playlist1) + 
-                youtube.playlist_items(gachi_playlist2),
-            'aliases': [],
-            'admins': [],
-            'discord_vk_map': [],
-            'vk_last_message_id': 125,
-            'video-titles': []
-        }
-        json.dump(cfg, f, indent=4)
-else:
-    with open(cfg_path, 'r') as f:
-        cfg = json.load(f)
-
-configRepo = ConfigRepository(cfg, update_cfg)
+configRepo = ConfigRepository(default_config_strategy)
 player = Player()
 browser = None # Browser()
 

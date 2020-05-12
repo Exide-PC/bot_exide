@@ -73,6 +73,7 @@ class Voice:
                 pass # TODO do something here probably on server switch
         else:
             await voice_channel.connect()
+        await asyncio.sleep(0.5)
 
     def stop(self):
         client = self._get_client()

@@ -85,7 +85,7 @@ player = Player()
 browser = None # Browser()
 
 def reboot_handler():
-    browser.quit()
+    # browser.quit()
     os.system('youtube-dl --rm-cache-dir')
     os.system('git pull')
     os.system('start startup.py')

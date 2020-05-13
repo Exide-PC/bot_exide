@@ -63,7 +63,9 @@ class Voice:
 
         if (self.is_connected()):
             if (self._get_client().is_connected()):
-                await self._get_client().move_to(voice_channel)
+                if (voice_channel.id != self._get_client().channel.id):
+                    await self._get_client().move_to(voice_channel)
+                    await asyncio.sleep(0.5)
             else:
                 logging.error('Not connected voice client encountered, should never get here!')
                 self.stop_event.set()
@@ -73,7 +75,7 @@ class Voice:
                 pass # TODO do something here probably on server switch
         else:
             await voice_channel.connect()
-        await asyncio.sleep(0.5)
+            await asyncio.sleep(0.5)
 
     def stop(self):
         client = self._get_client()

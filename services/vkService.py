@@ -60,9 +60,8 @@ class VkService:
             'channel': ctx.voice_channel().name
         }
 
-        if (self._player.is_playing()):
-            await ctx.send_message(f'Music "{title}" was added to queue by vk pm from {author}')
-        self._player.enqueue_rich(item_callback, title, ctx, payload, MessageType.RichMedia)
+        await ctx.send_message(payload, MessageType.RichMedia)
+        self._player.enqueue(item_callback, title, ctx)
 
     async def __loop(self):
         while (True):

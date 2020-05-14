@@ -7,6 +7,7 @@ from discord.player import PCMVolumeTransformer
 import logging
 import uuid
 from models.ExecutionContext import ExecutionContext
+from messageFormatter import MessageType
 
 class Item:
     def __init__(self, path_callback, short_title, context, payload=None, message_type=None):
@@ -183,7 +184,7 @@ class Player(Voice):
         if (item.is_rich()):
             await item.context.send_message(item.payload, item.message_type)
         else:
-            await item.context.send_message(f'Now playing: {item.short_title}')
+            await item.context.send_message(item.short_title, MessageType.Playing)
 
     def enqueue(self, path_callback, short_title, ctx):
         item = Item(path_callback, short_title, ctx)

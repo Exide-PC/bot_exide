@@ -2,11 +2,15 @@ from enum import Enum
 from discord import Embed
 from math import trunc
 
+# https://support.discord.com/hc/en-us/articles/210298617-Markdown-Text-101-Chat-Formatting-Bold-Italic-Underline-
+# https://leovoel.github.io/embed-visualizer/
+
 class MessageType(Enum):
     Common = 0
     Embed = 1
     Italic = 2
-    RichMedia = 3
+    Playing = 3
+    RichMedia = 4
 
 class MessageFormatter:
     def format(self, payload, type: MessageType):
@@ -20,6 +24,9 @@ class MessageFormatter:
             embed.description = payload
         elif (type == MessageType.Italic):
             content = f'***{payload}***'
+        elif (type == MessageType.Playing):
+            content = f'**Playing** :notes: `{payload}`'
+            pass
         elif (type == MessageType.RichMedia):
             embed = Embed()
             embed.set_author(name = f'{payload["user"]} added to queue', icon_url=payload['avatar'])

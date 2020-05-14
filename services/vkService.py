@@ -9,6 +9,8 @@ from utils.execute_blocking import execute_blocking
 from bot import BotExide
 import logging
 from models.ExecutionException import ExecutionException
+from models.ExecutionContext import ExecutionContext
+from messageFormatter import MessageType
 
 class VkService:
 
@@ -27,7 +29,7 @@ class VkService:
         self.__establish_connection()
         asyncio.create_task(self.__loop())
 
-    async def __enqueue_audio(self, audio, ctx):
+    async def __enqueue_audio(self, audio, ctx: ExecutionContext):
         if (ctx.voice_channel() == None):
             return
 
@@ -48,9 +50,19 @@ class VkService:
 
         author = ctx.author.display_name
         title = f'{audio["artist"]} - {audio["title"]}'
+        payload = {
+            'title': title,
+            'author': author,
+            'duration': audio['duration'],
+            'user': ctx.author.display_name,
+            'avatar': str(ctx.author.avatar_url),
+            'source': 'vk.com',
+            'channel': ctx.voice_channel().name
+        }
 
-        await ctx.send_message(f'Music "{title}" was added to queue by vk pm from {author}')
-        self._player.enqueue(item_callback, title, ctx)
+        if (self._player.is_playing()):
+            await ctx.send_message(f'Music "{title}" was added to queue by vk pm from {author}')
+        self._player.enqueue_rich(item_callback, title, ctx, payload, MessageType.RichMedia)
 
     async def __loop(self):
         while (True):

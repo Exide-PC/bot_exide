@@ -18,7 +18,7 @@ class Item:
         self.payload = payload
         self.message_type = message_type
 
-    def is_formatted(self):
+    def is_rich(self):
         return self.payload and self.message_type
 
 class Voice:
@@ -180,7 +180,7 @@ class Player(Voice):
             await asyncio.sleep(3)
 
     async def notify_playing(self, item: Item):
-        if (item.is_formatted()):
+        if (item.is_rich()):
             await item.context.send_message(item.payload, item.message_type)
         else:
             await item.context.send_message(f'Now playing: {item.short_title}')

@@ -46,3 +46,14 @@ class MessageFormatter:
         formatted += f'{minutes:02}:'
         formatted += f'{seconds:02}'
         return formatted
+
+def createRichMediaPayload(title, author, duration, user, avatar, source, channel):
+    return {
+        'title': title,
+        'author': author,
+        'duration': duration,
+        'user': user,
+        'avatar': avatar,
+        'source': source,
+        'channel': channel
+    }

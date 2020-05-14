@@ -10,7 +10,7 @@ from bot import BotExide
 import logging
 from models.ExecutionException import ExecutionException
 from models.ExecutionContext import ExecutionContext
-from messageFormatter import MessageType
+from messageFormatter import MessageType, createRichMediaPayload
 
 class VkService:
 
@@ -50,15 +50,16 @@ class VkService:
 
         author = ctx.author.display_name
         title = f'{audio["artist"]} - {audio["title"]}'
-        payload = {
-            'title': title,
-            'author': author,
-            'duration': audio['duration'],
-            'user': ctx.author.display_name,
-            'avatar': str(ctx.author.avatar_url),
-            'source': ':regional_indicator_v::regional_indicator_k:',
-            'channel': ctx.voice_channel().name
-        }
+
+        payload = createRichMediaPayload(
+            title = title,
+            author = author,
+            duration = audio['duration'],
+            user = ctx.author.display_name,
+            avatar = str(ctx.author.avatar_url),
+            source = ':regional_indicator_v::regional_indicator_k:',
+            channel = ctx.voice_channel().name
+        )
 
         await ctx.send_message(payload, MessageType.RichMedia)
         self._player.enqueue(item_callback, title, ctx)

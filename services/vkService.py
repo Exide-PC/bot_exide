@@ -36,6 +36,8 @@ class VkService:
         async def item_callback():
             id = audio['id']
             cached_path = self._vkCacheRepository.try_get_v2(id)
+            logging.info(f'Music id cache was found: ' + str(bool(cached_path)))
+
             if (cached_path):
                 return cached_path
 

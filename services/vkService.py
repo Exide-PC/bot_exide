@@ -123,7 +123,7 @@ class VkService:
 
         failed_code = json.get('failed')
         if (failed_code):
-            logging.info(f'Failed polling attempt encountered. Response: {json}')
+            logging.debug(f'Failed polling attempt encountered. Response: {json}')
             if (failed_code == 1):
                 self._eventId = json['ts']
             else:
@@ -142,7 +142,7 @@ class VkService:
         self._sessionKey = json['key']
         self._eventId = json['ts']
 
-        logging.info(f'Established vk api connection. Response: {json}')
+        logging.debug(f'Established vk api connection. Response: {json}')
 
     def __execute_method(self, method, params):
         return requests.get(f'https://api.vk.com/method/{method}', params={

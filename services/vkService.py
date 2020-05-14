@@ -56,7 +56,7 @@ class VkService:
             'duration': audio['duration'],
             'user': ctx.author.display_name,
             'avatar': str(ctx.author.avatar_url),
-            'source': 'vk.com',
+            'source': ':regional_indicator_v::regional_indicator_k:',
             'channel': ctx.voice_channel().name
         }
 

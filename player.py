@@ -165,20 +165,26 @@ class Player(Voice):
 
     async def ensure_connection(self):
         # waiting for connection establishment
+        bad_connection = False
+
         while (True):
             socket_ok = not self.bot.ws.closed
             client = self._get_client()
             voice_ok = client == None or client.is_connected()
 
+            if (not socket_ok or not voice_ok):
+                logging.info(
+                    'Waiting for connection establishment. ' +
+                    f'Socket: {"Ok" if socket_ok else "Not ok"}, Voice: {"Ok" if socket_ok else "Not ok"}')
+                bad_connection = True
+            
             if (socket_ok and voice_ok):
                 break
 
-            if (not socket_ok):
-                logging.debug(f'Closed socket state encountered')
-            if (not voice_ok):
-                logging.debug(f'Invalid voice client encountered')
-
             await asyncio.sleep(3)
+        
+        if (bad_connection):
+            logging.info('Connection was established')        
 
     async def notify_playing(self, item: Item):
         if (item.is_rich()):

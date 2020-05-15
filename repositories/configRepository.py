@@ -18,7 +18,7 @@ class ConfigRepository:
 
     def bind_vk_user(self, vk_user_id, discord_user_id):
         self._config['discord_vk_map'] = list(filter(
-            lambda b: b[0] != vk_user_id, # allowed multiple vk accounts for discord user
+            lambda b: b[0] != vk_user_id and b[1] != discord_user_id,
             self._config['discord_vk_map']
         ))
         self._config['discord_vk_map'].append([vk_user_id, discord_user_id])

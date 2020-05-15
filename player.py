@@ -174,9 +174,9 @@ class Player(Voice):
                 break
 
             if (not socket_ok):
-                logging.warning(f'Closed socket state encountered')
+                logging.debug(f'Closed socket state encountered')
             if (not voice_ok):
-                logging.warning(f'Invalid voice client encountered')
+                logging.debug(f'Invalid voice client encountered')
 
             await asyncio.sleep(3)
 

@@ -203,4 +203,4 @@ class VkService:
             'random_id': message_id
         })
         
-        await ctx.send_message("Your VK profile was successfully registered. Now you can send music via pm to https://vk.com/exideprod")
+        await ctx.send_message("Your VK profile was successfully registered. Now you can send music via pm to https://vk.com/im?sel=-117878831")

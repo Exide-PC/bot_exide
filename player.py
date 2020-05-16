@@ -145,7 +145,6 @@ class Player(Voice):
             finally:
                 self.current_item = None
                 await asyncio.sleep(1)
-                await self.ensure_connection()
                 counter += 1
                 if (counter % 1200 == 0):
                     logging.debug(f'Loop guid: {short_id}')

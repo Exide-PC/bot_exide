@@ -61,18 +61,19 @@ class Voice:
 
     async def join_channel(self, voice_channel):
         if (voice_channel == None): return
+        client = self._get_client()
 
-        if (self.is_connected()):
-            if (self._get_client().is_connected()):
-                if (voice_channel.id != self._get_client().channel.id):
+        if (client):
+            if (client.is_connected()):
+                if (voice_channel.id != client.channel.id):
                     logging.info(f'Moving to channel {voice_channel.name}...')
-                    await self._get_client().move_to(voice_channel)
+                    await client.move_to(voice_channel)
                 else:
                     logging.info(f'Already in channel {voice_channel.name}')
             else:
                 logging.error('Not connected voice client encountered, should never get here!')
                 self.stop_event.set()
-                await self._get_client().move_to(voice_channel)
+                await client.move_to(voice_channel)
                 await self.disconnect()
                 await voice_channel.connect()
                 pass # TODO do something here probably on server switch

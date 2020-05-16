@@ -65,8 +65,10 @@ class Voice:
         if (self.is_connected()):
             if (self._get_client().is_connected()):
                 if (voice_channel.id != self._get_client().channel.id):
+                    logging.info(f'Moving to channel {voice_channel.name}...')
                     await self._get_client().move_to(voice_channel)
-                    await asyncio.sleep(0.5)
+                else:
+                    logging.info(f'Already in channel {voice_channel.name}')
             else:
                 logging.error('Not connected voice client encountered, should never get here!')
                 self.stop_event.set()
@@ -75,8 +77,8 @@ class Voice:
                 await voice_channel.connect()
                 pass # TODO do something here probably on server switch
         else:
+            logging.info(f'Connecting to channel {voice_channel.name}...')
             await voice_channel.connect()
-            await asyncio.sleep(0.5)
 
     def stop(self):
         client = self._get_client()
@@ -134,11 +136,11 @@ class Player(Voice):
 
                     # post-condition loop to play music at least one
                     while (True):
+                        await self.ensure_connection()
                         await self.play_async(file_path)
                         if (not self.is_repeat_mode): break
             except Exception as e:
-                logging.error('Unhandled error bellow occured in player loop')
-                logging.error(e)
+                logging.error(f'Unhandled error occured in player loop: {e}')
             finally:
                 self.current_item = None
                 await asyncio.sleep(1)
@@ -173,18 +175,19 @@ class Player(Voice):
             voice_ok = client == None or client.is_connected()
 
             if (not socket_ok or not voice_ok):
-                logging.info(
-                    'Waiting for connection establishment. ' +
-                    f'Socket: {"Ok" if socket_ok else "Not ok"}, Voice: {"Ok" if socket_ok else "Not ok"}')
                 bad_connection = True
+                message = 'Waiting for connection establishment. '
+                message += f'Socket: {"Ok" if socket_ok else "Not ok"}, '
+                message += f'Voice: {"Ok" if voice_ok else "Not ok"}' if client else 'Voice: -'
+                logging.info(message)
             
             if (socket_ok and voice_ok):
                 break
 
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
         
         if (bad_connection):
-            logging.info('Connection was established')        
+            logging.info('Connection was established')      
 
     async def notify_playing(self, item: Item):
         if (item.is_rich()):

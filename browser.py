@@ -54,11 +54,35 @@ class Browser:
 
     def __init__(self):
         options = Options()
-        options.add_extension(r'extensions\vk_music_downloader.crx3')
+        options.headless = True
 
         driver = webdriver.Chrome(options=options)
         self.driver = driver
 
+        # self.__init_vk_stuff()
+
+    def create_room(self, video_url):
+        driver = self.driver
+        driver.get("https://sync-tube.de/")
+        
+        self.__wait_one_by_selector('a[href="create"]').click()
+        settings = self.__wait_one_by_id('btnSettings')
+        time.sleep(0.5) # settings are not accessed immediately somehow
+        settings.click()
+        time.sleep(0.5) # animation
+        self.__wait_by_id('0')[3].click()
+        self.__wait_one_by_className('btnClose').click()
+        time.sleep(0.5) # animation
+
+        self.__wait_one_by_className('searchInput').send_keys(video_url)
+        self.__wait_one_by_className('searchInput').send_keys(Keys.ENTER)
+
+        url = driver.current_url
+        driver.get('data:,')
+        return url
+
+    def __init_vk_stuff(self):
+        driver = self.driver
         driver.get("chrome://downloads/")
 
         driver.execute_script("window.open('');")

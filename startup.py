@@ -14,6 +14,7 @@ from executors.YoutubeExtension import YoutubeExtension
 from executors.AliasExtension import AliasExtension
 from executors.BotExideExtension import BotExideExtension
 from executors.VkExtension import VkExtension
+from executors.SyncTubeExtension import SyncTubeExtension
 from repositories.configRepository import ConfigRepository
 from repositories.vkCacheRepository import VkCacheRepository
 from browser import Browser
@@ -66,10 +67,10 @@ def default_config_strategy():
 
 configRepo = ConfigRepository(default_config_strategy)
 player = Player()
-browser = None # Browser()
+browser = Browser()
 
 def reboot_handler():
-    # browser.quit()
+    browser.quit()
     os.system('youtube-dl --rm-cache-dir')
     os.system('git pull')
     os.system('start startup.py')
@@ -81,12 +82,12 @@ extensions = [
     GachiExtension(player, configRepo),
     AliasExtension(configRepo),
     BotExideExtension(reboot_handler),
-    VkExtension(browser, player, configRepo)
+    VkExtension(browser, player, configRepo),
+    SyncTubeExtension(browser)
 ]
 
 bot = BotExide(extensions, configRepo)
 try:
     bot.run(env.discord_token)
 finally:
-    pass
-    # browser.quit()
+    browser.quit()

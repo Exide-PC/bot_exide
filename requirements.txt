@@ -1,0 +1,7 @@
+discord.py[voice]
+python-dotenv
+requests
+youtube_dl
+selenium
+bs4
+lxml

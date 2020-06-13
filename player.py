@@ -82,11 +82,13 @@ class Voice:
             await voice_channel.connect()
 
     def stop(self):
+        logging.info('Stopping playing music')
         client = self._get_client()
         if (client == None): return
         client.stop()
 
     async def disconnect(self):
+        logging.info('Disconnecting from voice')
         client = self._get_client()
         if (client == None):
             return

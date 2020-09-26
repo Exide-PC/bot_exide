@@ -172,7 +172,7 @@ class Player(Voice):
         bad_connection_logged = False
 
         while (True):
-            socket_ok = not self.bot.ws.closed
+            socket_ok = self.bot.ws.open
             client = self._get_client()
             voice_ok = client == None or client.is_connected()
 

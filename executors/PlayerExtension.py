@@ -17,7 +17,7 @@ class PlayerExtension(DiscordExtension):
         return 'Music player commands'
 
     def isserving(self, ctx: ExecutionContext):
-        return ctx.cmd in ['join', 'disc', 'skip', 'stop', 'repeat', 'queue']
+        return ctx.cmd in ['join', 'disc', 'skip', 'stop', 'repeat', 'queue', 'next']
 
     async def execute(self, ctx: ExecutionContext):
         player = self.player

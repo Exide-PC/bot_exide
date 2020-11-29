@@ -18,8 +18,10 @@ class VkCacheRepository:
         return newPath
 
     def try_get(self, music: MusicEntry):
-        newPath = self.__get_path(music)
-        return newPath if path.exists(newPath) else None
+        return None
+        # Not using for now due to id collision issue from vk side
+        # newPath = self.__get_path(music)
+        # return newPath if path.exists(newPath) else None
 
     def __get_path(self, music: MusicEntry):
         name = replace_forbidden(f'{music.author} - {music.title} - {music.duration}.mp3')

@@ -84,7 +84,10 @@ class VkService:
                         continue
 
                     vk_user_id = event['object']['user_id']
-                    self.__mark_as_read(vk_user_id, event['object']['id'])
+                    try:
+                        self.__mark_as_read(vk_user_id, event['object']['id'])
+                    except Exception as e:
+                        logging.warning(f'Could not mark message as read. Error: {e}')
 
                     discord_user_id = self._configRepo.get_discord_user_id_bound_to_vk(vk_user_id)
                     if (not discord_user_id):
@@ -100,7 +103,7 @@ class VkService:
                     for audio in audio_objects:
                         await self.__enqueue_audio(audio, context)
             except Exception as e:
-                logging.error(f'Error occured during vk events polling')
+                logging.error(f'Error below occured during vk events polling')
                 logging.error(e)
 
     def __mark_as_read(self, peer_id, start_message_id):

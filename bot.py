@@ -130,25 +130,6 @@ class BotExide(discord.Client):
 
         return msg
 
-    async def on_voice_state_update(self, member, before, after):
-        protected_members = [
-            286920219912306688,
-            229987174857179136
-        ]
-        shved = self.guilds[0].get_member(
-            402848249658081307
-        )
-
-        if (before.channel == None or after.channel == None): return
-        if (member.id not in protected_members or shved.voice == None): return
-        if (before.channel.name == after.channel.name): return
-        if ('Бочка' not in after.channel.name and 'AFK' not in after.channel.name): return
-
-        after_copy = after.channel # after arguments mutates somehow, idk why
-
-        await member.move_to(before.channel)
-        await shved.move_to(after_copy)
-
     async def on_message(self, message):
         if (message.channel.type.name != 'private' and 
             message.channel.name != 'bot-exide' or

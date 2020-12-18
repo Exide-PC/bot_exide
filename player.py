@@ -142,6 +142,13 @@ class Player(Voice):
                         await self.ensure_connection()
                         await self.play_async(file_path)
                         if (not self.is_repeat_mode): break
+
+                # leaving channel if queue is empty
+                if (self.is_connected()):
+                    await self.disconnect()
+
+                await asyncio.sleep(delay)
+
             except Exception as e:
                 logging.error(f'Unhandled error occured in player loop: {e}')
             finally:

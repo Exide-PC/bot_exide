@@ -147,8 +147,6 @@ class Player(Voice):
                 if (self.is_connected()):
                     await self.disconnect()
 
-                await asyncio.sleep(delay)
-
             except Exception as e:
                 logging.error(f'Unhandled error occured in player loop: {e}')
             finally:

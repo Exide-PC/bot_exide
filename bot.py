@@ -35,7 +35,9 @@ class BotExide(discord.Client):
     def __init__(self, extensions, configRepo, loop=None, **options):
         self._extensions = extensions
         self._configRepo = configRepo
-        super().__init__(loop=loop, **options)
+        intents = discord.Intents.default()
+        intents.members = True
+        super().__init__(loop=loop, **options, intents=intents)
 
     @property
     def strictMode(self):

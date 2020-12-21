@@ -23,14 +23,14 @@ class BotExideExtension(DiscordExtension):
         cmd = ctx.cmd
 
         if (cmd == 'reboot'):
-            if (ctx.isadmin):
-                logging.info(f'{ctx.author.display_name} invoked reboot')
-                self._reboot_handler()
-            else:
-                logging.info(f'Unathorized reboot attempt from {ctx.author.display_name}, kicking...')
-                await ctx.send_message('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
-                await asyncio.sleep(2)
-                await ctx.author.move_to(None)
+            # if (ctx.isadmin):
+            logging.info(f'{ctx.author.display_name} invoked reboot')
+            self._reboot_handler()
+            # else:
+            #     logging.info(f'Unathorized reboot attempt from {ctx.author.display_name}, kicking...')
+            #     await ctx.send_message('Hey buddy, i think you got the wrong door, the leather-club is two blocks down')
+            #     await asyncio.sleep(2)
+            #     await ctx.author.move_to(None)
 
         elif (cmd == 'strict'):
             if (ctx.isadmin):

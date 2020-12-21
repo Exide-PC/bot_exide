@@ -1,7 +1,7 @@
-discord.py[voice]
-python-dotenv
+discord.py[voice]==1.5.1
+python-dotenv==0.15.0
 requests
 youtube_dl
-selenium
-bs4
-lxml
+selenium==3.141.0
+bs4==0.0.1
+lxml==4.6.2

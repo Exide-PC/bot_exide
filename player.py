@@ -93,7 +93,10 @@ class Voice:
         if (client == None):
             return
 
-        await client.disconnect(force=True)
+        try:
+            await client.disconnect(force=True)
+        except Exception as e:
+            logging.error(f'Error occured on disconnection attempt: {e}')
 
     def initialize(self, bot):
         self.bot = bot
@@ -114,8 +117,11 @@ class Player(Voice):
         loop_id = uuid.uuid4().__str__()
         short_id = loop_id[0:8]
         logging.info(f'Starting player loop ({loop_id})')
+
         while (True):
             try:
+                played_something = False
+                
                 while (self.is_queue_mode and (len(self.queue) > 0)):
 
                     item: Item = self.queue.pop(0)
@@ -142,9 +148,11 @@ class Player(Voice):
                         await self.ensure_connection()
                         await self.play_async(file_path)
                         if (not self.is_repeat_mode): break
+                    
+                    played_something = True
 
                 # leaving channel if queue is empty
-                if (self.is_connected()):
+                if (self.is_connected() and played_something):
                     await self.disconnect()
 
             except Exception as e:
